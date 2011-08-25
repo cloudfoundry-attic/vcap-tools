@@ -74,7 +74,7 @@ module Collector
       tags = tags.merge({:job => @job, :index => @index})
       command = "put #{name} #{@now} #{value} #{tags.collect { |tag| tag.join("=") }.sort.join(" ")}\n"
       @logger.debug1(command)
-      command = @tsdb_connection.send_data(command)
+      @tsdb_connection.send_data(command)
     end
 
     # Sends latency metrics to the TSDB server
