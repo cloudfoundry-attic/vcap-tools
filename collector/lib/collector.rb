@@ -41,6 +41,12 @@ module Collector
 
       @tsdb_connection = EventMachine.connect(Config.tsdb_host, Config.tsdb_port, TsdbConnection)
 
+      NATS.on_error do |e|
+        @logger.fatal("Exiting, NATS error")
+        @logger.fatal(e)
+        exit
+      end
+
       @nats = NATS.connect(:uri => Config.nats_uri) do
         # Send initially to discover what's already running
         @nats.subscribe(ANNOUNCE_SUBJECT) {|message| process_component_discovery(message)}
