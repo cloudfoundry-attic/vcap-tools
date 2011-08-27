@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+$:.unshift(File.expand_path("../lib", File.dirname(__FILE__)))
+
+require "router_registrar"
+
+config_file = ENV["CONFIG_FILE"] || File.expand_path("../config/config.yml", File.dirname(__FILE__))
+RouterRegistrar::Config.configure(YAML.load_file(config_file))
+
+EM.run do
+  RouterRegistrar::RouterRegistrar.new
+end
