@@ -8,18 +8,23 @@ module Collector
 
     def connection_completed
       @logger.info("Connected to TSDB server")
+      @port, @ip = Socket.unpack_sockaddr_in(get_peername)
     end
 
     def unbind
-      @logger.warn("Connection to TSDB server dropped.")
-
-      EM.add_timer(1.0) do
-        begin
-          reconnect(@ip, @port)
-        rescue EventMachine::ConnectionError => e
-          @logger.warn(e)
-          unbind
+      if @port && @ip
+        @logger.warn("Lost connection to TSDB server, reconnecting")
+        EM.add_timer(1.0) do
+          begin
+            reconnect(@ip, @port)
+          rescue EventMachine::ConnectionError => e
+            @logger.warn(e)
+            unbind
+          end
         end
+      else
+        @logger.fatal("Couldn't connect to TSDB server, exiting.")
+        exit!
       end
     end
 
