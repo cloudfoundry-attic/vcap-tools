@@ -28,6 +28,10 @@ module RouterRegistrar
   end
 
   class RouterRegistrar
+    ROUTER_START_TOPIC = "router.start"
+    ROUTER_REGISTER_TOPIC = "router.register"
+    ROUTER_UNREGISTER_TOPIC = "router.unregister"
+
     def initialize
       @logger = Config.logger
 
@@ -46,16 +50,25 @@ module RouterRegistrar
 
       @nats = NATS.connect(:uri => Config.nats_uri) do
         @logger.info("Connected to NATS")
-        @nats.subscribe("router.start") do
+        @nats.subscribe(ROUTER_START_TOPIC) do
           send_registration_message
         end
         send_registration_message
       end
+    end
 
-      def send_registration_message
-        @logger.info("Sending registration: #{@registration_message}")
-        @nats.publish("router.register", @registration_message)
-      end
+    def shutdown(&block)
+      send_unregistration_message(&block)
+    end
+
+    def send_registration_message
+      @logger.info("Sending registration: #{@registration_message}")
+      @nats.publish(ROUTER_REGISTER_TOPIC, @registration_message)
+    end
+
+    def send_unregistration_message(&block)
+      @logger.info("Sending unregistration: #{@registration_message}")
+      @nats.publish(ROUTER_UNREGISTER_TOPIC, @registration_message, &block)
     end
 
   end
