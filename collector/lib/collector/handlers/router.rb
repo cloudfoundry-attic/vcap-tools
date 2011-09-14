@@ -12,11 +12,11 @@ module Collector
               # Add synthetic tag so we can isolate all the apps
               tags["component"] = "apps" if key == "framework"
 
-              send_metric("router.requests", metrics["requests"], key => value)
-              send_latency_metric("router.latency.1m", metrics["latency"], key => value)
+              send_metric("router.requests", metrics["requests"], tags)
+              send_latency_metric("router.latency.1m", metrics["latency"], tags)
               ["2xx", "3xx", "4xx", "5xx", "xxx"].each do |status_code|
                 send_metric("router.responses", metrics["responses_#{status_code}"],
-                            key => value, "status" => status_code)
+                            tags.merge("status" => status_code))
               end
             end
           end
