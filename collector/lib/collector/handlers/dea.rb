@@ -8,7 +8,7 @@ module Collector
         if varz["frameworks"]
           varz["frameworks"].each do |framework, metrics|
             ["used_memory", "reserved_memory", "used_disk"].each do |metric_name|
-              send_metric("frameworks.#{metric_name}", metrics[metric_name] / 1000, :framework => framework)
+              send_metric("frameworks.#{metric_name}", metrics[metric_name] / 1024, :framework => framework)
             end
             send_metric("frameworks.used_cpu", metrics["used_cpu"], :framework => framework)
           end
@@ -17,7 +17,7 @@ module Collector
         if varz["runtimes"]
           varz["runtimes"].each do |runtime, metrics|
             ["used_memory", "reserved_memory", "used_disk"].each do |metric_name|
-              send_metric("runtimes.#{metric_name}", metrics[metric_name] / 1000, :runtime => runtime)
+              send_metric("runtimes.#{metric_name}", metrics[metric_name] / 1024, :runtime => runtime)
             end
             send_metric("runtimes.used_cpu", metrics["used_cpu"], :runtime => runtime)
           end

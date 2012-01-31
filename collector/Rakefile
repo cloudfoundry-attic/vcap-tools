@@ -1,7 +1,12 @@
 require "bundler"
 require "rspec/core/rake_task"
 
-RSpec::Core::RakeTask.new(:spec)
+ENV["BUNDLE_GEMFILE"] = "Gemfile"
+
+RSpec::Core::RakeTask.new("spec") do |t|
+  t.rspec_opts = ["--format", "documentation", "--colour"]
+  t.pattern    = "spec/unit/**/*_spec.rb"
+end
 
 task :default => :spec
 

@@ -2,3 +2,4 @@
 .bundle
 .yardoc
 .DS_Store
+collector/config/dev*.yml
