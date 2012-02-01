@@ -183,6 +183,34 @@ describe Collector::Collector do
 
   end
 
+  describe :local_metrics do
+    def send_local_metrics
+      Time.stub!(:now).and_return(1000)
+
+      create_fake_collector do |collector, tsdb, nats|
+        collector.process_nats_ping(997)
+        collector.process_nats_ping(998)
+        collector.process_nats_ping(999)
+
+        handler = mock(:Handler)
+        yield handler
+
+        Collector::Handler.should_receive(:handler).
+          with(tsdb, "collector", 0, 1000).
+          and_return(handler)
+
+        collector.send_local_metrics
+      end
+    end
+
+    it "should send nats latency rolling metric" do
+      send_local_metrics do |handler|
+        latency = {:value => 6000, :samples => 3}
+        handler.should_receive(:send_latency_metric).with("nats.latency.1m", latency)
+      end
+    end
+  end
+
   describe :get_job_args do
     it "should mark the core components" do
       create_fake_collector do |collector, _, _|

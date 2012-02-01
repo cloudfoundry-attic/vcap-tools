@@ -9,6 +9,7 @@ require "em-http-request"
 require "eventmachine"
 require "nats/client"
 require "vcap/logging"
+require "vcap/rolling_metric"
 
 require "collector/config"
 require "collector/handler"
@@ -23,7 +24,6 @@ module Collector
 
   # Varz collector
   class Collector
-
     ANNOUNCE_SUBJECT = "vcap.component.announce"
     DISCOVER_SUBJECT = "vcap.component.discover"
 
@@ -40,6 +40,7 @@ module Collector
                                   HEALTH_MANAGER_COMPONENT, ROUTER_COMPONENT])
 
       @tsdb_connection = EventMachine.connect(Config.tsdb_host, Config.tsdb_port, TsdbConnection)
+      @nats_latency = VCAP::RollingMetric.new(60)
 
       NATS.on_error do |e|
         @logger.fatal("Exiting, NATS error")
@@ -48,6 +49,7 @@ module Collector
       end
 
       @nats = NATS.connect(:uri => Config.nats_uri) do
+        @logger.info("Connected to NATS")
         # Send initially to discover what's already running
         @nats.subscribe(ANNOUNCE_SUBJECT) {|message| process_component_discovery(message)}
 
@@ -55,6 +57,10 @@ module Collector
         @nats.subscribe(@inbox) {|message| process_component_discovery(message)}
 
         @nats.publish(DISCOVER_SUBJECT, "", @inbox)
+
+        @nats.subscribe("collector.nats.ping") do |message|
+          process_nats_ping(message.to_f)
+        end
 
         setup_timers
       end
@@ -66,6 +72,15 @@ module Collector
       EM.add_periodic_timer(Config.varz_interval) { fetch_varz }
       EM.add_periodic_timer(Config.healthz_interval) { fetch_healthz }
       EM.add_periodic_timer(Config.prune_interval) { prune_components }
+      EM.add_periodic_timer(Config.nats_ping_interval) { @nats.publish("collector.nats.ping", Time.now.to_f.to_s) }
+      EM.add_periodic_timer(Config.local_metrics_interval) { send_local_metrics }
+    end
+
+    # Processes NATS ping in order to calculate NATS roundtrip latency
+    #
+    # @param [Float] ping_timestamp UNIX timestamp when the ping was sent
+    def process_nats_ping(ping_timestamp)
+      @nats_latency << ((Time.now.to_f - ping_timestamp) * 1000).to_i
     end
 
     # Processes a discovered component message, recording it's location for varz/healthz probes.
@@ -97,6 +112,12 @@ module Collector
     rescue => e
       @logger.warn("Error pruning components: #{e.message}")
       @logger.warn(e)
+    end
+
+    # Generates metrics that don't require any interactions with varz or healthz
+    def send_local_metrics
+      handler = Handler.handler(@tsdb_connection, "collector", Config.index, Time.now.to_i)
+      handler.send_latency_metric("nats.latency.1m", @nats_latency.value)
     end
 
     # Fetches the varzs from all the components and calls the proper {Handler} to record the metrics in the TSDB server

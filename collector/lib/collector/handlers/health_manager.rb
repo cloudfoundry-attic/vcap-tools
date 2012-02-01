@@ -48,7 +48,6 @@ module Collector
         end
 
         send_metric("total_users", varz["total_users"]) if varz["total_users"]
-        send_latency_metric("nats.latency.1m", varz["nats_latency"]) if varz["nats_latency"]
       end
 
     end
