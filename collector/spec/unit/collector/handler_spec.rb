@@ -1,3 +1,5 @@
+# Copyright (c) 2009-2012 VMware, Inc.
+
 require File.expand_path("../../spec_helper", File.dirname(__FILE__))
 
 describe Collector::Handler do
@@ -39,18 +41,21 @@ describe Collector::Handler do
         register "Test"
       end
 
-      Collector::Handler.handler(nil, "Test", nil, nil).should be_kind_of(test_handler)
+      Collector::Handler.handler(nil, "Test", nil, nil).
+          should be_kind_of(test_handler)
     end
 
     it "should return the default handler when none registered" do
-      Collector::Handler.handler(nil, "Test", nil, nil).should be_kind_of(Collector::Handler)
+      Collector::Handler.handler(nil, "Test", nil, nil).
+          should be_kind_of(Collector::Handler)
     end
   end
 
   describe :send_metric do
     it "should send the metric to the TSDB server" do
       connection = mock(:TsdbConnection)
-      connection.should_receive(:send_data).with("put some_key 10000 2 index=1 job=Test tag=value\n")
+      connection.should_receive(:send_data).
+          with("put some_key 10000 2 index=1 job=Test tag=value\n")
       handler = Collector::Handler.handler(connection, "Test", 1, 10000)
       handler.send_metric("some_key", 2, {:tag => "value"})
     end
@@ -59,9 +64,12 @@ describe Collector::Handler do
   describe :send_latency_metric do
     it "should send the metric to the TSDB server" do
       connection = mock(:TsdbConnection)
-      connection.should_receive(:send_data).with("put latency_key 10000 5 index=1 job=Test tag=value\n")
+      connection.should_receive(:send_data).
+          with("put latency_key 10000 5 index=1 job=Test tag=value\n")
       handler = Collector::Handler.handler(connection, "Test", 1, 10000)
-      handler.send_latency_metric("latency_key", {"value" => 10, "samples" => 2}, {:tag => "value"})
+      handler.send_latency_metric("latency_key",
+                                  {"value" => 10, "samples" => 2},
+                                  {:tag => "value"})
     end
   end
 

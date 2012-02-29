@@ -1,7 +1,8 @@
+# Copyright (c) 2009-2012 VMware, Inc.
+
 module Collector
   # TSDB connection for sending metrics
   class TsdbConnection < EventMachine::Connection
-
     def post_init
       @logger = Config.logger
     end
@@ -31,6 +32,5 @@ module Collector
     def receive_data(data)
       @logger.debug("Received from TSDB: #{data}")
     end
-
   end
 end

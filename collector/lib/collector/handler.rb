@@ -1,7 +1,10 @@
+# Copyright (c) 2009-2012 VMware, Inc.
+
 module Collector
   # Varz metric handler
   #
-  # It's used for processing varz from jobs and publishing them to the TSDB server
+  # It's used for processing varz from jobs and publishing them to the TSDB
+  # server
   class Handler
     @handler_map = {}
 
@@ -19,14 +22,17 @@ module Collector
         Handler.handler_map[job] = self
       end
 
-      # Retrieves a {Handler} for the job type with the provided context. Will default to the generic one if
-      # the job does not have a handler registered.
+      # Retrieves a {Handler} for the job type with the provided context. Will
+      # default to the generic one if the job does not have a handler
+      # registered.
       #
-      # @param [TsdbConnection] tsdb_connection the TSDB connection to use for writing metrics
+      # @param [TsdbConnection] tsdb_connection the TSDB connection to use for
+      #   writing metrics
       # @param [String] job the job name
       # @param [Fixnum] index the job index
       # @param [Fixnum] now the timestamp of when the metrics were collected
-      # @return [Handler] the handler for this job from the handler map or the default one
+      # @return [Handler] the handler for this job from the handler map or the
+      #   default one
       def handler(tsdb_connection, job, index, now)
         if handler_class = Handler.handler_map[job]
           handler_class.new(tsdb_connection, job, index, now)
@@ -71,8 +77,9 @@ module Collector
     # @param [String, Fixnum] value the metric value
     # @param [Hash] tags the metric tags
     def send_metric(name, value, tags = {})
-      tags = tags.merge({:job => @job, :index => @index})
-      command = "put #{name} #{@now} #{value} #{tags.collect { |tag| tag.join("=") }.sort.join(" ")}\n"
+      tags = tags.merge({:job => @job, :index => @index}).
+                  collect { |tag| tag.join("=") }.sort.join(" ")
+      command = "put #{name} #{@now} #{value} #{tags}\n"
       @logger.debug1(command)
       @tsdb_connection.send_data(command)
     end

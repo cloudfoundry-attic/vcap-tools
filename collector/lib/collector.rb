@@ -1,5 +1,8 @@
+# Copyright (c) 2009-2012 VMware, Inc.
+
 $:.unshift(File.expand_path(".", File.dirname(__FILE__)))
 
+require "base64"
 require "set"
 
 require "rubygems"
@@ -29,8 +32,10 @@ module Collector
 
     # Creates a new varz collector based on the {Config} settings.
     def initialize
-      Dir[File.join(File.dirname(__FILE__), "..", "lib", "collector", "handlers", "*.rb")].each do |file|
-        require File.join("collector", "handlers", File.basename(file, File.extname(file)))
+      Dir[File.join(File.dirname(__FILE__),
+                    "../lib/collector/handlers/*.rb")].each do |file|
+        require File.join("collector/handlers",
+                          File.basename(file, File.extname(file)))
       end
 
       @logger = Config.logger
@@ -39,7 +44,8 @@ module Collector
       @core_components = Set.new([CLOUD_CONTROLLER_COMPONENT, DEA_COMPONENT,
                                   HEALTH_MANAGER_COMPONENT, ROUTER_COMPONENT])
 
-      @tsdb_connection = EventMachine.connect(Config.tsdb_host, Config.tsdb_port, TsdbConnection)
+      @tsdb_connection = EventMachine.connect(
+          Config.tsdb_host, Config.tsdb_port, TsdbConnection)
       @nats_latency = VCAP::RollingMetric.new(60)
 
       NATS.on_error do |e|
@@ -51,7 +57,9 @@ module Collector
       @nats = NATS.connect(:uri => Config.nats_uri) do
         @logger.info("Connected to NATS")
         # Send initially to discover what's already running
-        @nats.subscribe(ANNOUNCE_SUBJECT) {|message| process_component_discovery(message)}
+        @nats.subscribe(ANNOUNCE_SUBJECT) do |message|
+          process_component_discovery(message)
+        end
 
         @inbox = NATS.create_inbox
         @nats.subscribe(@inbox) {|message| process_component_discovery(message)}
@@ -68,12 +76,21 @@ module Collector
 
     # Configures the periodic timers for collecting varzs.
     def setup_timers
-      EM.add_periodic_timer(Config.discover_interval) { @nats.publish(DISCOVER_SUBJECT, "", @inbox) }
+      EM.add_periodic_timer(Config.discover_interval) do
+        @nats.publish(DISCOVER_SUBJECT, "", @inbox)
+      end
+
       EM.add_periodic_timer(Config.varz_interval) { fetch_varz }
       EM.add_periodic_timer(Config.healthz_interval) { fetch_healthz }
       EM.add_periodic_timer(Config.prune_interval) { prune_components }
-      EM.add_periodic_timer(Config.nats_ping_interval) { @nats.publish("collector.nats.ping", Time.now.to_f.to_s) }
-      EM.add_periodic_timer(Config.local_metrics_interval) { send_local_metrics }
+
+      EM.add_periodic_timer(Config.local_metrics_interval) do
+        send_local_metrics
+      end
+
+      EM.add_periodic_timer(Config.nats_ping_interval) do
+        @nats.publish("collector.nats.ping", Time.now.to_f.to_s)
+      end
     end
 
     # Processes NATS ping in order to calculate NATS roundtrip latency
@@ -83,13 +100,15 @@ module Collector
       @nats_latency << ((Time.now.to_f - ping_timestamp) * 1000).to_i
     end
 
-    # Processes a discovered component message, recording it's location for varz/healthz probes.
+    # Processes a discovered component message, recording it's location for
+    # varz/healthz probes.
     #
     # @param [Hash] message the discovery message
     def process_component_discovery(message)
       message = Yajl::Parser.parse(message)
       if message["index"]
-        @logger.debug1("Found #{message["type"]}/#{message["index"]} @ #{message["host"]} #{message["credentials"]}")
+        @logger.debug1("Found #{message["type"]}/#{message["index"]} @ " +
+                           " #{message["host"]} #{message["credentials"]}")
         instances = (@components[message["type"]] ||= {})
         instances[message["index"]] = {
           :host => message["host"],
@@ -105,7 +124,9 @@ module Collector
     # Prunes components that haven't been heard from in a while
     def prune_components
       @components.each do |_, instances|
-        instances.delete_if { |_, component| Time.now.to_i - component[:timestamp] > Config.prune_interval }
+        instances.delete_if do |_, component|
+          Time.now.to_i - component[:timestamp] > Config.prune_interval
+        end
       end
 
       @components.delete_if { |_, instances| instances.empty? }
@@ -116,16 +137,19 @@ module Collector
 
     # Generates metrics that don't require any interactions with varz or healthz
     def send_local_metrics
-      handler = Handler.handler(@tsdb_connection, "collector", Config.index, Time.now.to_i)
+      handler = Handler.handler(@tsdb_connection, "collector", Config.index,
+                                Time.now.to_i)
       handler.send_latency_metric("nats.latency.1m", @nats_latency.value)
     end
 
-    # Fetches the varzs from all the components and calls the proper {Handler} to record the metrics in the TSDB server
+    # Fetches the varzs from all the components and calls the proper {Handler}
+    # to record the metrics in the TSDB server
     def fetch_varz
       @components.each do |job, instances|
         instances.each do |index, instance|
-          http = EventMachine::HttpRequest.new("http://#{instance[:host]}/varz").get(
-                  :head => {"authorization" => instance[:credentials]})
+          varz_uri = "http://#{instance[:host]}/varz"
+          http = EventMachine::HttpRequest.new(varz_uri).get(
+                  :head => authorization_headers(instance))
           http.errback do
             @logger.warn("Failed fetching varz from: #{instance[:host]}")
           end
@@ -135,7 +159,10 @@ module Collector
               now = Time.now.to_i
 
               handler = Handler.handler(@tsdb_connection, job, index, now)
-              handler.send_metric("mem", varz["mem"] / 1024, get_job_tags(job))
+              if varz["mem"]
+                handler.send_metric("mem", varz["mem"] / 1024,
+                                    get_job_tags(job))
+              end
               handler.process(varz)
             rescue => e
               @logger.warn("Error processing varz: #{e.message}")
@@ -146,13 +173,14 @@ module Collector
       end
     end
 
-    # Fetches the healthz from all the components and calls the proper {Handler} to record the metrics in the
-    # TSDB server
+    # Fetches the healthz from all the components and calls the proper {Handler}
+    # to record the metrics in the TSDB server
     def fetch_healthz
       @components.each do |job, instances|
         instances.each do |index, instance|
-          http = EventMachine::HttpRequest.new("http://#{instance[:host]}/healthz").get(
-                  :head => {"authorization" => instance[:credentials]})
+          healthz_uri = "http://#{instance[:host]}/healthz"
+          http = EventMachine::HttpRequest.new(healthz_uri).get(
+                  :head => authorization_headers(instance))
           http.errback do
             @logger.warn("Failed fetching healthz from: #{instance[:host]}")
           end
@@ -160,8 +188,10 @@ module Collector
             begin
               now = Time.now.to_i
               handler = Handler.handler(@tsdb_connection, job, index, now)
-              handler.send_metric("healthy", http.response.strip.downcase == "ok" ? 1 : 0, get_job_tags(job))
+              is_healthy = http.response.strip.downcase == "ok" ? 1 : 0
+              handler.send_metric("healthy", is_healthy, get_job_tags(job))
             rescue => e
+              handler.send_metric("healthy", 0, get_job_tags(job))
               @logger.warn("Error processing healthz: #{e.message}")
               @logger.warn(e)
             end
@@ -170,7 +200,8 @@ module Collector
       end
     end
 
-    # Generates the common tags used for generating common (memory, health, etc.) metrics.
+    # Generates the common tags used for generating common
+    # (memory, health, etc.) metrics.
     #
     # @param [String] type the job type
     # @return [Hash<Symbol, String>] tags for this job type
@@ -178,11 +209,24 @@ module Collector
       tags = {}
       if @core_components.include?(type)
         tags[:role] = "core"
-      elsif type =~ /(?:(^[^-]+)-Service)|(?:(^.*)aaS-(?:(?:Node)|(?:Provisioner)))/
+      elsif type =~
+          /(?:(^[^-]+)-Service)|(?:(^.*)aaS-(?:(?:Node)|(?:Provisioner)))/
         tags[:role] = "service"
         tags[:service_type] = $1 || $2
       end
       tags
+    end
+
+    # Generates the authorization headers for a specific instance
+    #
+    # @param [Hash] instance hash
+    # @return [Hash] headers
+    def authorization_headers(instance)
+      credentials = Base64.strict_encode64(instance[:credentials].join(":"))
+
+      {
+        "Authorization" => "Basic #{credentials}"
+      }
     end
 
   end

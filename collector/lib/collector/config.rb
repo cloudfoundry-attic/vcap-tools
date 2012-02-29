@@ -1,3 +1,5 @@
+# Copyright (c) 2009-2012 VMware, Inc.
+
 module Collector
   # Singleton config used throughout
   class Config
@@ -33,12 +35,12 @@ module Collector
 
         intervals = config["intervals"]
 
-        @discover_interval = intervals["discover"]
-        @varz_interval = intervals["varz"]
-        @healthz_interval = intervals["healthz"]
-        @prune_interval = intervals["prune"]
-        @nats_ping_interval = intervals["nats_ping"]
-        @local_metrics_interval = intervals["local_metrics"]
+        @discover_interval = intervals["discover"] || 60
+        @varz_interval = intervals["varz"] || 10
+        @healthz_interval = intervals["healthz"] || 5
+        @prune_interval = intervals["prune"] || 300
+        @nats_ping_interval = intervals["nats_ping"] || 10
+        @local_metrics_interval = intervals["local_metrics"] || 10
       end
     end
   end

@@ -1,3 +1,5 @@
+# Copyright (c) 2009-2012 VMware, Inc.
+
 require File.expand_path("../spec_helper", File.dirname(__FILE__))
 
 describe Collector::Collector do
@@ -8,10 +10,14 @@ describe Collector::Collector do
     Collector::Config.nats_uri = "nats://foo:bar@nats-host:14222"
 
     tsdb_connection = mock(:TsdbConnection)
-    EventMachine.should_receive(:connect).with("dummy", 14242, Collector::TsdbConnection).and_return(tsdb_connection)
+    EventMachine.should_receive(:connect).
+        with("dummy", 14242, Collector::TsdbConnection).
+        and_return(tsdb_connection)
 
     nats_connection = mock(:NatsConnection)
-    NATS.should_receive(:connect).with(:uri => "nats://foo:bar@nats-host:14222").and_return(nats_connection)
+    NATS.should_receive(:connect).
+        with(:uri => "nats://foo:bar@nats-host:14222").
+        and_return(nats_connection)
 
     yield Collector::Collector.new, tsdb_connection, nats_connection
   end
@@ -87,7 +93,7 @@ describe Collector::Collector do
   end
 
   describe :fetch_varz do
-    it "should fetch the varz from the component and use a handler to process the results" do
+    def test_varz
       create_fake_collector do |collector, tsdb_connection, _|
         collector.process_component_discovery(Yajl::Encoder.encode({
           "type" => "Test",
@@ -105,26 +111,49 @@ describe Collector::Collector do
         end
 
         http_client = mock(:HttpClient)
-        http_client.should_receive(:get).with({:head=>{"authorization" => ["user", "pass"]}}).and_return(http_request)
+        http_client.should_receive(:get).
+            with({:head=>{"Authorization" => "Basic dXNlcjpwYXNz"}}).
+            and_return(http_request)
 
-        EventMachine::HttpRequest.should_receive(:new).with("http://test-host:1234/varz").and_return(http_client)
+        EventMachine::HttpRequest.should_receive(:new).
+            with("http://test-host:1234/varz").
+            and_return(http_client)
 
         collector.fetch_varz
 
         callback.should_not be_nil
+        handler = mock(:Handler)
 
+        yield(http_request, handler)
+
+        Collector::Handler.should_receive(:handler).
+            with(tsdb_connection, "Test", 1, kind_of(Fixnum)).
+            and_return(handler)
+        callback.call
+      end
+    end
+
+
+    it "should fetch the varz from the component and use a " +
+           "handler to process the results" do
+      test_varz do |http_request, handler|
         http_request.should_receive(:response).and_return(Yajl::Encoder.encode({
           "mem" => 1234,
           "test" => "foo"
         }))
 
-        handler = mock(:Handler)
         handler.should_receive(:send_metric).with("mem", 1, {})
         handler.should_receive(:process).with({"mem" => 1234, "test" => "foo"})
+      end
+    end
 
-        Collector::Handler.should_receive(:handler).with(tsdb_connection, "Test", 1, kind_of(Fixnum)).
-                and_return(handler)
-        callback.call
+    it "should skip memory metric if not there" do
+      test_varz do |http_request, handler|
+        http_request.should_receive(:response).and_return(Yajl::Encoder.encode({
+          "test" => "foo"
+        }))
+
+        handler.should_receive(:process).with({"test" => "foo"})
       end
     end
   end
@@ -149,9 +178,13 @@ describe Collector::Collector do
         end
 
         http_client = mock(:HttpClient)
-        http_client.should_receive(:get).with({:head=>{"authorization" => ["user", "pass"]}}).and_return(http_request)
+        http_client.should_receive(:get).
+            with({:head=>{"Authorization" => "Basic dXNlcjpwYXNz"}}).
+            and_return(http_request)
 
-        EventMachine::HttpRequest.should_receive(:new).with("http://test-host:1234/healthz").and_return(http_client)
+        EventMachine::HttpRequest.should_receive(:new).
+            with("http://test-host:1234/healthz").
+            and_return(http_client)
 
         collector.fetch_healthz
 
@@ -161,20 +194,23 @@ describe Collector::Collector do
 
         yield http_request, handler
 
-        Collector::Handler.should_receive(:handler).with(tsdb_connection, "Test", 1, kind_of(Fixnum)).
-                and_return(handler)
+        Collector::Handler.should_receive(:handler).
+            with(tsdb_connection, "Test", 1, kind_of(Fixnum)).
+            and_return(handler)
         callback.call
       end
     end
 
-    it "should fetch the healthz from the component and mark healthy instances" do
+    it "should fetch the healthz from the component and " +
+           "mark healthy instances" do
       setup_healthz_request do |http_request, handler|
         http_request.should_receive(:response).and_return("ok")
         handler.should_receive(:send_metric).with("healthy", 1, {})
       end
     end
 
-    it "should fetch the healthz from the component and mark unhealthy instances" do
+    it "should fetch the healthz from the component and " +
+           "mark unhealthy instances" do
       setup_healthz_request do |http_request, handler|
         http_request.should_receive(:response).and_return("not ok")
         handler.should_receive(:send_metric).with("healthy", 0, {})
@@ -206,7 +242,8 @@ describe Collector::Collector do
     it "should send nats latency rolling metric" do
       send_local_metrics do |handler|
         latency = {:value => 6000, :samples => 3}
-        handler.should_receive(:send_latency_metric).with("nats.latency.1m", latency)
+        handler.should_receive(:send_latency_metric).
+            with("nats.latency.1m", latency)
       end
     end
   end
@@ -223,16 +260,35 @@ describe Collector::Collector do
     it "should mark the service node components" do
       create_fake_collector do |collector, _, _|
         {"MongoaaS-Node" => "Mongo", "RMQaaS-Node" => "RMQ"}.each do |job, name|
-          collector.get_job_tags(job).should == {:role => "service", :service_type => name}
+          collector.get_job_tags(job).should ==
+              {:role => "service", :service_type => name}
         end
       end
     end
 
     it "should mark the service provisioner components" do
       create_fake_collector do |collector, _, _|
-        {"MongoaaS-Provisioner" => "Mongo", "RMQaaS-Provisioner" => "RMQ"}.each do |job, name|
-          collector.get_job_tags(job).should == {:role => "service", :service_type => name}
+        {
+          "MongoaaS-Provisioner" => "Mongo",
+          "RMQaaS-Provisioner" => "RMQ"
+        }.each do |job, name|
+          collector.get_job_tags(job).should ==
+              {:role => "service", :service_type => name}
         end
+      end
+    end
+  end
+
+  describe :authorization_headers do
+    it "should correctly encode long credentials (no CR/LF)" do
+      create_fake_collector do |collector, _, _|
+        collector.authorization_headers({:credentials => ["A" * 64, "B" * 64]}).
+            should == {
+              "Authorization" =>
+                 "Basic QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB" +
+                   "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQTpCQkJCQkJC" +
+                   "QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJC" +
+                   "QkJCQkJCQkJCQkJCQkJCQkJCQkJC"}
       end
     end
   end

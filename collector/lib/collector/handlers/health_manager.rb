@@ -1,7 +1,8 @@
+# Copyright (c) 2009-2012 VMware, Inc.
+
 module Collector
   class Handler
     class HealthManager < Handler
-
       register HEALTH_MANAGER_COMPONENT
 
       METRICS = {
@@ -29,7 +30,8 @@ module Collector
               framework_varz.each do |framework, metrics|
                 metric_map.each do |varz_name, metric_name|
                   if metrics[varz_name]
-                    send_metric("frameworks.#{metric_name}", metrics[varz_name], :framework => framework)
+                    send_metric("frameworks.#{metric_name}", metrics[varz_name],
+                                :framework => framework)
                   end
                 end
               end
@@ -39,7 +41,8 @@ module Collector
               runtime_varz.each do |runtime, metrics|
                 metric_map.each do |varz_name, metric_name|
                   if metrics[varz_name]
-                    send_metric("runtimes.#{metric_name}", metrics[varz_name], :runtime => runtime)
+                    send_metric("runtimes.#{metric_name}", metrics[varz_name],
+                                :runtime => runtime)
                   end
                 end
               end
@@ -49,7 +52,6 @@ module Collector
 
         send_metric("total_users", varz["total_users"]) if varz["total_users"]
       end
-
     end
   end
 end
