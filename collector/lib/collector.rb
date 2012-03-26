@@ -16,6 +16,7 @@ require "vcap/rolling_metric"
 
 require "collector/config"
 require "collector/handler"
+require "collector/service_handler"
 require "collector/tsdb_connection"
 
 module Collector
@@ -24,6 +25,25 @@ module Collector
   DEA_COMPONENT = "DEA"
   HEALTH_MANAGER_COMPONENT = "HealthManager"
   ROUTER_COMPONENT = "Router"
+
+  # services components
+  MYSQL_PROVISIONER = "MyaaS-Provisioner"
+  MYSQL_NODE = "MyaaS-Node"
+
+  PGSQL_PROVISIONER = "AuaaS-Provisioner"
+  PGSQL_NODE = "AuaaS-Node"
+
+  MONGODB_PROVISIONER = "MongoaaS-Provisioner"
+  MONGODB_NODE = "MongoaaS-Node"
+
+  NEO4J_PROVISIONER = "Neo4jaaS-Provisioner"
+  NEO4J_NODE = "Neo4jaaS-Node"
+
+  RABBITMQ_PROVISIONER = "RMQaaS-Provisioner"
+  RABBITMQ_NODE = "RMQaaS-Node"
+
+  REDIS_PROVISIONER = "RaaS-Provisioner"
+  REDIS_NODE = "RaaS-Node"
 
   # Varz collector
   class Collector
@@ -212,7 +232,6 @@ module Collector
       elsif type =~
           /(?:(^[^-]+)-Service)|(?:(^.*)aaS-(?:(?:Node)|(?:Provisioner)))/
         tags[:role] = "service"
-        tags[:service_type] = $1 || $2
       end
       tags
     end

@@ -261,7 +261,7 @@ describe Collector::Collector do
       create_fake_collector do |collector, _, _|
         {"MongoaaS-Node" => "Mongo", "RMQaaS-Node" => "RMQ"}.each do |job, name|
           collector.get_job_tags(job).should ==
-              {:role => "service", :service_type => name}
+              {:role => "service"}
         end
       end
     end
@@ -273,7 +273,7 @@ describe Collector::Collector do
           "RMQaaS-Provisioner" => "RMQ"
         }.each do |job, name|
           collector.get_job_tags(job).should ==
-              {:role => "service", :service_type => name}
+              {:role => "service"}
         end
       end
     end
