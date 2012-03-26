@@ -259,21 +259,21 @@ describe Collector::Collector do
 
     it "should mark the service node components" do
       create_fake_collector do |collector, _, _|
-        {"MongoaaS-Node" => "Mongo", "RMQaaS-Node" => "RMQ"}.each do |job, name|
+        ["MongoaaS-Node", "RMQaaS-Node"].each do |job|
           collector.get_job_tags(job).should ==
-              {:role => "service", :service_type => name}
+              {:role => "service"}
         end
       end
     end
 
     it "should mark the service provisioner components" do
       create_fake_collector do |collector, _, _|
-        {
-          "MongoaaS-Provisioner" => "Mongo",
-          "RMQaaS-Provisioner" => "RMQ"
-        }.each do |job, name|
+        [
+          "MongoaaS-Provisioner",
+          "RMQaaS-Provisioner"
+        ].each do |job|
           collector.get_job_tags(job).should ==
-              {:role => "service", :service_type => name}
+              {:role => "service"}
         end
       end
     end
