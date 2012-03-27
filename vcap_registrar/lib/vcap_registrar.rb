@@ -76,7 +76,7 @@ module VcapRegistrar
       @registration_message = Yajl::Encoder.encode({
         :host => Config.host,
         :port => Config.port,
-        :uris => [Config.uri],
+        :uris => Array(Config.uri),
         :tags => Config.tags
       })
 
