@@ -45,6 +45,10 @@ module Collector
   REDIS_PROVISIONER = "RaaS-Provisioner"
   REDIS_NODE = "RaaS-Node"
 
+  SERIALIZATION_DATA_SERVER = "SerializationDataServer"
+
+  BACKUP_MANAGER = "BackupManager"
+
   # Varz collector
   class Collector
     ANNOUNCE_SUBJECT = "vcap.component.announce"
@@ -63,6 +67,13 @@ module Collector
       @components = {}
       @core_components = Set.new([CLOUD_CONTROLLER_COMPONENT, DEA_COMPONENT,
                                   HEALTH_MANAGER_COMPONENT, ROUTER_COMPONENT])
+      @sql_services = Set.new([MYSQL_PROVISIONER, MYSQL_NODE,
+                               PGSQL_PROVISIONER, PGSQL_NODE,
+                               MONGODB_PROVISIONER, MONGODB_NODE,
+                               NEO4J_PROVISIONER, NEO4J_NODE,
+                               RABBITMQ_PROVISIONER, RABBITMQ_NODE,
+                               REDIS_PROVISIONER, REDIS_NODE])
+      @other_services = Set.new([SERIALIZATION_DATA_SERVER, BACKUP_MANAGER])
 
       @tsdb_connection = EventMachine.connect(
           Config.tsdb_host, Config.tsdb_port, TsdbConnection)
@@ -229,8 +240,9 @@ module Collector
       tags = {}
       if @core_components.include?(type)
         tags[:role] = "core"
-      elsif type =~
-          /(?:(^[^-]+)-Service)|(?:(^.*)aaS-(?:(?:Node)|(?:Provisioner)))/
+      elsif @sql_services.include?(type)
+        tags[:role] = "service"
+      else @other_services.include?(type)
         tags[:role] = "service"
       end
       tags
