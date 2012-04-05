@@ -47,6 +47,10 @@ describe Collector::ServiceHandler do
       connection.should_receive(:send_data).
          with("put services.plans.score 10000 150 component=unknown " \
               "index=1 job=Test plan=free service_type=unknown\n")
+      connection.should_receive(:send_data).
+         with("put services.plans.allow_over_provisioning 10000 0 " \
+              "component=unknown index=1 job=Test plan=free " \
+              "service_type=unknown\n")
       handler = Collector::ServiceHandler.new(connection, "Test", 1, 10000)
       varz = {
                "plans" => [

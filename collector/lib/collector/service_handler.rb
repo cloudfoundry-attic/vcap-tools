@@ -38,6 +38,8 @@ module Collector
         send_metric("services.plans.high_water", plan["high_water"] || 0, :plan => plan["plan"])
         send_metric("services.plans.low_water", plan["low_water"] || 0, :plan => plan["plan"])
         send_metric("services.plans.score", plan["score"] || 0, :plan => plan["plan"])
+        send_metric("services.plans.allow_over_provisioning",
+                    plan["allow_over_provisioning"] ? 1 : 0, :plan => plan["plan"])
       end if varz["plans"]
     end
 
