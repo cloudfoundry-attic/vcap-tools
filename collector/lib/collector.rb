@@ -16,6 +16,7 @@ require "vcap/rolling_metric"
 
 require "collector/config"
 require "collector/handler"
+require "collector/service_handler"
 require "collector/tsdb_connection"
 
 module Collector
@@ -24,6 +25,29 @@ module Collector
   DEA_COMPONENT = "DEA"
   HEALTH_MANAGER_COMPONENT = "HealthManager"
   ROUTER_COMPONENT = "Router"
+
+  # services components
+  MYSQL_PROVISIONER = "MyaaS-Provisioner"
+  MYSQL_NODE = "MyaaS-Node"
+
+  PGSQL_PROVISIONER = "AuaaS-Provisioner"
+  PGSQL_NODE = "AuaaS-Node"
+
+  MONGODB_PROVISIONER = "MongoaaS-Provisioner"
+  MONGODB_NODE = "MongoaaS-Node"
+
+  NEO4J_PROVISIONER = "Neo4jaaS-Provisioner"
+  NEO4J_NODE = "Neo4jaaS-Node"
+
+  RABBITMQ_PROVISIONER = "RMQaaS-Provisioner"
+  RABBITMQ_NODE = "RMQaaS-Node"
+
+  REDIS_PROVISIONER = "RaaS-Provisioner"
+  REDIS_NODE = "RaaS-Node"
+
+  SERIALIZATION_DATA_SERVER = "SerializationDataServer"
+
+  BACKUP_MANAGER = "BackupManager"
 
   # Varz collector
   class Collector
@@ -43,6 +67,14 @@ module Collector
       @components = {}
       @core_components = Set.new([CLOUD_CONTROLLER_COMPONENT, DEA_COMPONENT,
                                   HEALTH_MANAGER_COMPONENT, ROUTER_COMPONENT])
+      @service_components = Set.new([MYSQL_PROVISIONER, MYSQL_NODE,
+                                     PGSQL_PROVISIONER, PGSQL_NODE,
+                                     MONGODB_PROVISIONER, MONGODB_NODE,
+                                     NEO4J_PROVISIONER, NEO4J_NODE,
+                                     RABBITMQ_PROVISIONER, RABBITMQ_NODE,
+                                     REDIS_PROVISIONER, REDIS_NODE])
+      @service_auxiliary_components = Set.new([SERIALIZATION_DATA_SERVER,
+                                               BACKUP_MANAGER])
 
       @tsdb_connection = EventMachine.connect(
           Config.tsdb_host, Config.tsdb_port, TsdbConnection)
@@ -209,10 +241,10 @@ module Collector
       tags = {}
       if @core_components.include?(type)
         tags[:role] = "core"
-      elsif type =~
-          /(?:(^[^-]+)-Service)|(?:(^.*)aaS-(?:(?:Node)|(?:Provisioner)))/
+      elsif @service_components.include?(type)
         tags[:role] = "service"
-        tags[:service_type] = $1 || $2
+      elsif @service_auxiliary_components.include?(type)
+        tags[:role] = "service"
       end
       tags
     end
