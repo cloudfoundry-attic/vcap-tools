@@ -7,6 +7,7 @@ module Collector
 
       def process(varz)
         process_plan_score_metric(varz)
+        process_online_nodes(varz)
       end
 
       def service_type

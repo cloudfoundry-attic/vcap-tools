@@ -43,6 +43,14 @@ module Collector
       end if varz["plans"]
     end
 
+    # Get online nodes varz for each service gateway, report the total
+    # number of online nodes
+    #
+    def process_online_nodes(varz)
+      return unless varz.include?("nodes")
+      send_metric("services.online_nodes", varz["nodes"].length)
+    end
+
     def service_type    # "mysql", "postgresql", "mongodb" ...
       "unknown"
     end
