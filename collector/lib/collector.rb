@@ -45,6 +45,9 @@ module Collector
   REDIS_PROVISIONER = "RaaS-Provisioner"
   REDIS_NODE = "RaaS-Node"
 
+  VBLOB_PROVISIONER = "VBlobaaS-Provisioner"
+  VBLOB_NODE = "VBlobaaS-Node"
+
   SERIALIZATION_DATA_SERVER = "SerializationDataServer"
 
   BACKUP_MANAGER = "BackupManager"
@@ -72,7 +75,8 @@ module Collector
                                      MONGODB_PROVISIONER, MONGODB_NODE,
                                      NEO4J_PROVISIONER, NEO4J_NODE,
                                      RABBITMQ_PROVISIONER, RABBITMQ_NODE,
-                                     REDIS_PROVISIONER, REDIS_NODE])
+                                     REDIS_PROVISIONER, REDIS_NODE,
+                                     VBLOB_PROVISIONER, VBLOB_NODE])
       @service_auxiliary_components = Set.new([SERIALIZATION_DATA_SERVER,
                                                BACKUP_MANAGER])
 

@@ -64,4 +64,27 @@ describe Collector::ServiceHandler do
     end
   end
 
+  describe :process_online_nodes do
+    it "should report online nodes number to TSDB server" do
+      connection = mock(:TsdbConnection)
+      connection.should_receive(:send_data).
+         with("put services.online_nodes 10000 2 component=unknown index=1 " \
+              "job=Test service_type=unknown\n")
+      handler = Collector::ServiceHandler.new(connection, "Test", 1, 10000)
+      varz = {
+               "nodes" => {
+                 "node_0" => {
+                   "available_capacity" => 50,
+                   "plan" => "free"
+                 },
+                 "node_1" => {
+                   "available_capacity" => 50,
+                   "plan" => "free"
+                 }
+               }
+      }
+      handler.process_online_nodes(varz)
+    end
+  end
+
 end
