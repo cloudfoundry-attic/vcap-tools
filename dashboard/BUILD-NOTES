@@ -1,0 +1,16 @@
+* GChart isn't published in a Maven repository. Therefore follow this process:
+-- Download http://code.google.com/p/clientsidegchart/downloads/detail?name=gchart-2.7.zip
+-- Unzip it
+-- From the unzipped directory, execute:
+   mvn install:install-file -Dfile=gchart.jar \
+   -DgroupId=com.googlecode.gchart -DartifactId=gchart \
+   -Dversion=2.7 -Dpackaging=jar \
+   -DgeneratePom=true -DcreateChecksum=true
+
+* Guava-gwt isn't published in a Maven repository, either. Therefore follow this process:
+-- Download http://guava-libraries.googlecode.com/files/guava-r09.zip
+-- Unzip it
+-- From the unzipped directory, execute:
+   mvn install:install-file -Dfile=guava-r09-gwt.jar \
+   -DgroupId=com.google.guava -DartifactId=guava -Dversion=r09 -Dclassifier=gwt \
+   -Dpackaging=jar -DgeneratePom=true -DcreateChecksum=true
