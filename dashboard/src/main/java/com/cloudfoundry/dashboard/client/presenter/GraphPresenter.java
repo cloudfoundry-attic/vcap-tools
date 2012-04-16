@@ -45,6 +45,9 @@ import com.gwtplatform.mvp.client.View;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.gwtplatform.mvp.client.proxy.PlaceRequest;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -297,6 +300,81 @@ public class GraphPresenter extends PresenterWidget<GraphPresenter.MyView>
     }
   }
 
+  public double getValueForPointsAt(List<DataPoint> points, long atTimestamp,
+      String name) {
+    for (int i = 0; i < points.size(); i++) {
+      boolean lastIteration = (i == points.size() - 1);
+      DataPoint point = points.get(i);
+      if (point.getTimestamp() == atTimestamp) {
+        // If we have the exact point, return it.
+        return point.getValue();
+      } else if (point.getTimestamp() > atTimestamp) {
+        // If we've iterated to a point beyond the timestamp we are looking
+        // for, then the previous point will be before the timestamp, so we'll
+        // average the two and estimate the value for the exact timestamp.
+        DataPoint prevPoint = (i - 1 >= 0) ? points.get(i - 1) : null;
+        if (prevPoint == null) {
+          // If there is no last timestamp, that means this is the first point.
+          return point.getValue();
+        }
+        double deltaBegEnd = (double) point.getTimestamp() - prevPoint.getTimestamp();
+        double deltaMidEnd = (double) point.getTimestamp() - atTimestamp;
+        double deltaBegEndVal = point.getValue() - prevPoint.getValue();
+        double pctBetwBegEnd = (1 - (deltaMidEnd / deltaBegEnd));
+        // The estimated value at the mid point.
+        return (pctBetwBegEnd * deltaBegEndVal) + prevPoint.getValue();
+      } else if (lastIteration == true) {
+        // If this is the last point in this set of points, return it.
+        return point.getValue();
+      }
+    }
+    return 0;
+  }
+
+  public void addAllLinePoint(List<DataPoint> totals,
+      Map<Metric, List<DataPoint>> mapEntries, Map.Entry<Metric,
+      List<DataPoint>> entry, Query query) {
+    List<DataPoint> points = entry.getValue();
+    for (DataPoint point : points) {
+      boolean totalHasIt = false;
+      for (DataPoint total : totals) {
+        if (total.getTimestamp() == point.getTimestamp()) {
+          totalHasIt = true;
+        }
+      }
+      if (totalHasIt == false) {
+        double total = point.getValue();
+        for (Map.Entry<Metric, List<DataPoint>> entryForTotals : mapEntries.entrySet()) {
+          if (entryForTotals != entry) {
+            String name = query.getLabelExtractor().extract(entryForTotals.getKey().getTags());
+            double val = getValueForPointsAt(entryForTotals.getValue(), point.getTimestamp(), name);
+            total += val;
+          }
+        }
+        totals.add(new DataPoint(point.getTimestamp(), total));
+      }
+    }
+  }
+
+  public void addAllLineToData(List<DataPoint> totals, Query query,
+      Map<PrioritizedLabel, List<DataPoint>> data) {
+    Collections.sort(totals, new Comparator<DataPoint>() {
+      @Override
+      public int compare(DataPoint o1, DataPoint o2) {
+        long result = o1.getTimestamp() - o2.getTimestamp();
+        if (result < 0) {
+          return -1;
+        } else if (result > 0) {
+          return 1;
+        } else {
+          return 0;
+        }
+      }
+    });
+
+    data.put(new PrioritizedLabel("all", query.getPriority()), totals);
+  }
+
   private void fetchData() {
     final Map<PrioritizedLabel, List<DataPoint>> data = Maps.newHashMap();
 
@@ -339,11 +417,21 @@ public class GraphPresenter extends PresenterWidget<GraphPresenter.MyView>
 
               pendingRequests[0]--;
 
-              Map<Metric, List<DataPoint>> points = result.getPoints();
-              for (Map.Entry<Metric, List<DataPoint>> entry : points.entrySet()) {
+              Map<Metric, List<DataPoint>> mapEntries = result.getPoints();
+              List<DataPoint> totals = new ArrayList<DataPoint>();
+              boolean createAllLine = query.getIncludeAllLine() == true;
+              for (Map.Entry<Metric, List<DataPoint>> entry : mapEntries.entrySet()) {
                 Metric metric = entry.getKey();
                 String label = query.getLabelExtractor().extract(metric.getTags());
                 data.put(new PrioritizedLabel(label, query.getPriority()), entry.getValue());
+
+                if (createAllLine == true) {
+                  addAllLinePoint(totals, mapEntries, entry, query);
+                }
+              }
+
+              if (createAllLine == true) {
+                addAllLineToData(totals, query, data);
               }
 
               if (pendingRequests[0] == 0) {
