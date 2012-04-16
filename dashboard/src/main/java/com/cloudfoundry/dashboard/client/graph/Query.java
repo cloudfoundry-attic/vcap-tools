@@ -36,6 +36,7 @@ public class Query {
     private Map<String, String> tags = null;
     private LabelExtractor labelExtractor;
     private int priority = 0;
+    private boolean includeAllLine = false;
 
     public Builder setAggregator(Aggregator aggregator) {
       this.aggregator = aggregator;
@@ -72,8 +73,14 @@ public class Query {
       return this;
     }
 
+    public Builder setIncludeAllLine(boolean includeAllLine) {
+      this.includeAllLine = includeAllLine;
+      return this;
+    }
+
     public Query createQuery() {
-      return new Query(aggregator, downsamplingAggregator, rate, metric, tags, labelExtractor, priority);
+      return new Query(aggregator, downsamplingAggregator, rate, metric, tags,
+          labelExtractor, priority, includeAllLine);
     }
 
   }
@@ -100,8 +107,12 @@ public class Query {
 
   private final int priority;
 
+  private final boolean includeAllLine;
+
   public Query(Aggregator aggregator, Aggregator downsamplingAggregator,
-               boolean rate, String metric, Map<String, String> tags, LabelExtractor labelExtractor, int priority) {
+               boolean rate, String metric, Map<String, String> tags,
+               LabelExtractor labelExtractor, int priority,
+               boolean includeAllLine) {
     this.aggregator = aggregator;
     this.downsamplingAggregator = downsamplingAggregator;
     this.rate = rate;
@@ -109,6 +120,11 @@ public class Query {
     this.tags = tags;
     this.labelExtractor = labelExtractor;
     this.priority = priority;
+    this.includeAllLine = includeAllLine;
+  }
+
+  public boolean getIncludeAllLine() {
+    return includeAllLine;
   }
 
   public Aggregator getAggregator() {

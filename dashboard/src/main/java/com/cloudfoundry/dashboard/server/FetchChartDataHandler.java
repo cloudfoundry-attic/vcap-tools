@@ -22,6 +22,11 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+
 import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,21 +75,22 @@ public class FetchChartDataHandler implements
       .put("sum", new Aggregators.SumAggregator())
       .build();
 
-  @Resource
-  private HttpClient httpClient;
-
   @Resource(name = "tsdb")
   private URI tsdbUri;
 
   @Override
   public FetchChartData.Result execute(FetchChartData action, ExecutionContext context) throws ActionException {
+    long start = System.currentTimeMillis();
+    // set the connection timeout value to 30 seconds (30000 milliseconds)
+    final HttpParams httpParams = new BasicHttpParams();
+    HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
+    HttpClient httpClient = new DefaultHttpClient(httpParams);
     try {
       URI uri = buildUri(action);
       HttpGet httpGet = new HttpGet(uri);
 
       long maxTimestampDelta = calculateMaxTimestampDelta(action);
 
-      long start = System.currentTimeMillis();
       logger.debug("Fetching: {}", uri.toString());
 
       HttpResponse response = httpClient.execute(httpGet);
