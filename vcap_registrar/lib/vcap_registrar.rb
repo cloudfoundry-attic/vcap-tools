@@ -6,12 +6,13 @@ require "bundler/setup"
 require "eventmachine"
 require "nats/client"
 require "vcap/logging"
+require "securerandom"
 
 module VcapRegistrar
 
   class Config
     class << self
-      [:logger, :nats_uri, :type, :host, :port, :username, :password, :uri, :tags].each { |option| attr_accessor option }
+      [:logger, :nats_uri, :type, :host, :port, :username, :password, :uri, :tags, :uuid].each { |option| attr_accessor option }
 
       def configure(config)
         @logger = VCAP::Logging.logger("vcap_registrar")
@@ -25,6 +26,8 @@ module VcapRegistrar
         @type = config["varz"]["type"]
         @username = config["varz"]["username"]
         @password = config["varz"]["password"]
+        @uuid = config["varz"]["uuid"] || SecureRandom.uuid
+        @id = config["id"]
       end
     end
   end
@@ -50,8 +53,9 @@ module VcapRegistrar
       @discover_msg = Yajl::Encoder.encode({
         :type => Config.type,
         :host => "#{Config.host}:#{Config.port}",
-        :index => 0,
-        :credentials => [Config.username, Config.password]
+        :index => Config.index || 0,
+        :credentials => [Config.username, Config.password],
+        :uuid => "#{index}-#{Config.uuid}"
       })
 
       unless (Config.username.nil? || Config.password.nil?)
