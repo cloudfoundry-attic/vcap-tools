@@ -179,6 +179,7 @@ module Collector
     def fetch_varz
       @components.each do |job, instances|
         instances.each do |index, instance|
+          next unless credentials_ok?(job, instance)
           varz_uri = "http://#{instance[:host]}/varz"
           http = EventMachine::HttpRequest.new(varz_uri).get(
                   :head => authorization_headers(instance))
@@ -210,6 +211,7 @@ module Collector
     def fetch_healthz
       @components.each do |job, instances|
         instances.each do |index, instance|
+          next unless credentials_ok?(job, instance)
           healthz_uri = "http://#{instance[:host]}/healthz"
           http = EventMachine::HttpRequest.new(healthz_uri).get(
                   :head => authorization_headers(instance))
@@ -247,6 +249,14 @@ module Collector
         tags[:role] = "service"
       end
       tags
+    end
+
+    def credentials_ok?(job, instance)
+      unless instance[:credentials].kind_of?(Array)
+        @logger.warn("Bad credentials from #{job.inspect} #{instance.inspect}")
+        return false
+      end
+      true
     end
 
     # Generates the authorization headers for a specific instance
