@@ -2,20 +2,19 @@
 
 module Collector
   class Handler
-    class MysqlProvisioner < ServiceHandler
-      register MYSQL_PROVISIONER
+    class VblobNode < ServiceHandler
+      register VBLOB_NODE
 
       def process(varz)
-        process_plan_score_metric(varz)
-        process_online_nodes(varz)
+        process_healthy_instances_metric(varz)
       end
 
       def service_type
-        "mysql"
+        "vblob"
       end
 
       def component
-        "gateway"
+        "node"
       end
 
     end

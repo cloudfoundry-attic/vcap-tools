@@ -2,8 +2,8 @@
 
 module Collector
   class Handler
-    class PostgresqlProvisioner < ServiceHandler
-      register PGSQL_PROVISIONER
+    class VblobProvisioner < ServiceHandler
+      register VBLOB_PROVISIONER
 
       def process(varz)
         process_plan_score_metric(varz)
@@ -11,7 +11,7 @@ module Collector
       end
 
       def service_type
-        "postgresql"
+        "vblob"
       end
 
       def component
