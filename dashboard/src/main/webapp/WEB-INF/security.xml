@@ -1,0 +1,73 @@
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+     xmlns:sec="http://www.springframework.org/schema/security"
+     xsi:schemaLocation="http://www.springframework.org/schema/security/oauth2 http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd
+    http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd
+    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+  <oauth:web-expression-handler id="oauthWebExpressionHandler" />
+
+  <!-- login entry point into dashboard: technically never used in Dashboard flows, declared here just to satisfy SpringSecurity -->
+  <bean id="oauthAuthenticationEntryPoint" class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint">
+    <property name="realmName" value="Dashboard" />
+  </bean>
+  <!-- Similarly, a dummy AuthenticationManager for SpringSecurity -->
+  <sec:authentication-manager alias="emptyAuthenticationManager" />
+
+  <!-- Default Oauth2 access denied handler -->
+  <bean id="oauthAccessDeniedHandler" class="org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler" />
+
+  <!-- list all unsecured resources/endpoints -->
+  <sec:http pattern="/logout.html" security="none" />
+
+  <!-- make ALL other requests go thru the Oauth security filters -->
+  <http pattern="/**" create-session="stateless"
+      entry-point-ref="oauthAuthenticationEntryPoint" access-decision-manager-ref="accessDecisionManager"
+        xmlns="http://www.springframework.org/schema/security">
+    <anonymous enabled="false" />
+    <intercept-url pattern="/**" access="scope=dashboard.user" />
+    <!-- The filter that uses Oauth2 auth-code flow to acquire an Oauth2 token if the user doesn't already have one -->
+    <custom-filter ref="oauth2RedirectForAccessTokenFilter" before="PRE_AUTH_FILTER" />
+    <!-- The filter that validates an Oauth token and loads an Oauth2Authentication object in the SecurityContextHolder -->
+    <custom-filter ref="oauth2AuthenticationFilter" position="PRE_AUTH_FILTER" />
+    <access-denied-handler ref="oauthAccessDeniedHandler" />
+    <logout logout-url="/logout" logout-success-url="/logout.html" />
+  </http>
+
+  <bean id="oauth2AuthenticationFilter" class="com.cloudfoundry.dashboard.security.oauth.Oauth2AuthenticationFilter">
+    <property name="authenticationEntryPoint" ref="oauthAuthenticationEntryPoint" />
+    <property name="restTemplate" ref="restTemplate" />
+    <property name="authenticationManager">
+      <!-- Use an Oauth2 AuthenticationManager since we will not manage any user accounts locally -->
+      <bean class="org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationManager">
+        <!-- this means we require 'dashboard' to be present in an Oauth token's 'aud' field -->
+        <property name="resourceId" value="dashboard" />
+        <!-- Using a custom token-service that reaches out to UAA to decode the token -->
+        <property name="tokenServices">
+          <bean class="com.cloudfoundry.dashboard.security.oauth.RemoteTokenServices">
+            <property name="checkTokenEndpointUrl" value="${uaa.checkToken.url}" />
+            <property name="clientId" value="${uaa.client.id}" />
+            <property name="clientSecret" value="${uaa.client.secret}" />
+          </bean>
+        </property>
+      </bean>
+    </property>
+  </bean>
+  <oauth:client id="oauth2RedirectForAccessTokenFilter" />
+  <oauth:rest-template id="restTemplate" resource="uaa" />
+  <oauth:resource id="uaa" type="authorization_code" pre-established-redirect-uri="http://localhost:8081/dashboard" client-id="${uaa.client.id}" client-secret="${uaa.client.secret}"
+          access-token-uri="${uaa.accessToken.url}" user-authorization-uri="${uaa.userAuthorize.url}" scope="dashboard.user,openid" />
+
+  <bean id="accessDecisionManager" class="org.springframework.security.access.vote.UnanimousBased">
+    <constructor-arg>
+      <list>
+        <bean class="org.springframework.security.oauth2.provider.vote.ScopeVoter">
+          <property name="scopePrefix" value="scope=" />
+        </bean>
+        <bean class="org.springframework.security.access.vote.RoleVoter" />
+        <bean class="org.springframework.security.access.vote.AuthenticatedVoter" />
+      </list>
+    </constructor-arg>
+  </bean>
+
+</beans>
