@@ -7,11 +7,11 @@
 
   <oauth:web-expression-handler id="oauthWebExpressionHandler" />
 
-  <!-- login entry point into dashboard: technically never used in Dashboard flows, declared here just to satisfy SpringSecurity -->
-  <bean id="oauthAuthenticationEntryPoint" class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint">
-    <property name="realmName" value="Dashboard" />
+  <!-- login entry point into dashboard: a spring-security-oauth filter defined later on catches this end-point to acquire an OAuth token -->
+  <bean id="oauthAuthenticationEntryPoint" class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+    <constructor-arg value="/login" />
   </bean>
-  <!-- Similarly, a dummy AuthenticationManager for SpringSecurity -->
+  <!-- A dummy AuthenticationManager for SpringSecurity -->
   <sec:authentication-manager alias="emptyAuthenticationManager" />
 
   <!-- Default Oauth2 access denied handler -->
@@ -21,41 +21,34 @@
   <sec:http pattern="/logout.html" security="none" />
 
   <!-- make ALL other requests go thru the Oauth security filters -->
-  <http pattern="/**" create-session="stateless"
-      entry-point-ref="oauthAuthenticationEntryPoint" access-decision-manager-ref="accessDecisionManager"
+  <http pattern="/**" create-session="always" entry-point-ref="oauthAuthenticationEntryPoint" disable-url-rewriting="true" use-expressions="true"
         xmlns="http://www.springframework.org/schema/security">
     <anonymous enabled="false" />
-    <intercept-url pattern="/**" access="scope=dashboard.user" />
+    <intercept-url pattern="/**" access="hasRole('dashboard.user')" />
     <!-- The filter that uses Oauth2 auth-code flow to acquire an Oauth2 token if the user doesn't already have one -->
-    <custom-filter ref="oauth2RedirectForAccessTokenFilter" before="PRE_AUTH_FILTER" />
+    <custom-filter ref="oauth2RedirectForAccessTokenFilter" after="EXCEPTION_TRANSLATION_FILTER" />
     <!-- The filter that validates an Oauth token and loads an Oauth2Authentication object in the SecurityContextHolder -->
-    <custom-filter ref="oauth2AuthenticationFilter" position="PRE_AUTH_FILTER" />
+    <custom-filter ref="oauth2AuthenticationFilter" before="FILTER_SECURITY_INTERCEPTOR" />
     <access-denied-handler ref="oauthAccessDeniedHandler" />
     <logout logout-url="/logout" logout-success-url="/logout.html" />
   </http>
 
-  <oauth:resource-server id="oauth2AuthenticationFilter" entry-point-ref="oauthAuthenticationEntryPoint" resource-id="dashboard" rest-template-ref="restTemplate" token-services-ref="remoteTokenServices" />
   <oauth:client id="oauth2RedirectForAccessTokenFilter" />
+  <bean id="oauth2AuthenticationFilter" class="org.springframework.security.oauth2.client.filter.OAuth2ClientAuthenticationProcessingFilter">
+    <constructor-arg name="defaultFilterProcessesUrl" value="/login" /> <!-- This should match whatever you have configured in the login entry point above -->
+    <property name="restTemplate" ref="restTemplate" />
+    <property name="tokenServices" ref="remoteTokenServices" />
+    <property name="userInfoUrl" value="${uaa.userInfo.url}" />
+  </bean>
+
   <oauth:rest-template id="restTemplate" resource="oauth2Token" />
   <oauth:resource id="oauth2Token" type="authorization_code" client-id="${uaa.client.id}" client-secret="${uaa.client.secret}"
                   access-token-uri="${uaa.accessToken.url}" user-authorization-uri="${uaa.userAuthorize.url}" scope="dashboard.user,openid" />
 
-  <bean id="remoteTokenServices" class="org.springframework.security.oauth2.provider.token.RemoteTokenServices">
-    <property name="checkTokenEndpointUrl" value="${uaa.checkToken.url}" />
-    <property name="clientId" value="${uaa.client.id}" />
-    <property name="clientSecret" value="${uaa.client.secret}" />
-  </bean>
-
-  <bean id="accessDecisionManager" class="org.springframework.security.access.vote.UnanimousBased">
-    <constructor-arg>
-      <list>
-        <bean class="org.springframework.security.oauth2.provider.vote.ScopeVoter">
-          <property name="scopePrefix" value="scope=" />
-        </bean>
-        <bean class="org.springframework.security.access.vote.RoleVoter" />
-        <bean class="org.springframework.security.access.vote.AuthenticatedVoter" />
-      </list>
-    </constructor-arg>
+  <bean id="remoteTokenServices" class="org.springframework.security.oauth2.client.token.auth.RemoteCheckTokenServices">
+    <constructor-arg name="checkTokenEndpointUrl" value="${uaa.checkToken.url}" />
+    <constructor-arg name="clientId" value="${uaa.client.id}" />
+    <constructor-arg name="clientSecret" value="${uaa.client.secret}" />
   </bean>
 
 </beans>
