@@ -1,0 +1,59 @@
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+       xmlns:sec="http://www.springframework.org/schema/security"
+       xsi:schemaLocation="http://www.springframework.org/schema/security/oauth2 http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd
+    http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd
+    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+    <oauth:web-expression-handler id="oauthWebExpressionHandler"/>
+
+    <!-- login entry point into dashboard: a spring-security-oauth filter defined later on catches this end-point to acquire an OAuth token -->
+    <bean id="oauthAuthenticationEntryPoint"
+          class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+        <constructor-arg value="/login"/>
+    </bean>
+    <!-- A dummy AuthenticationManager for SpringSecurity -->
+    <sec:authentication-manager alias="emptyAuthenticationManager"/>
+
+    <!-- Default Oauth2 access denied handler -->
+    <bean id="oauthAccessDeniedHandler"
+          class="org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler"/>
+
+    <!-- list all unsecured resources/endpoints -->
+    <sec:http pattern="/logout.html" security="none"/>
+
+    <!-- make ALL other requests go thru the Oauth security filters -->
+    <http pattern="/**" create-session="always" entry-point-ref="oauthAuthenticationEntryPoint"
+          disable-url-rewriting="true" use-expressions="true"
+          xmlns="http://www.springframework.org/schema/security">
+        <anonymous enabled="false"/>
+        <intercept-url pattern="/**" access="hasRole('dashboard.user')"/>
+        <!-- The filter that uses Oauth2 auth-code flow to acquire an Oauth2 token if the user doesn't already have one -->
+        <custom-filter ref="oauth2RedirectForAccessTokenFilter" after="EXCEPTION_TRANSLATION_FILTER"/>
+        <!-- The filter that validates an Oauth token and loads an Oauth2Authentication object in the SecurityContextHolder -->
+        <custom-filter ref="oauth2AuthenticationFilter" before="FILTER_SECURITY_INTERCEPTOR"/>
+        <access-denied-handler ref="oauthAccessDeniedHandler"/>
+        <logout logout-url="/logout" logout-success-url="/logout.html"/>
+    </http>
+
+    <oauth:client id="oauth2RedirectForAccessTokenFilter"/>
+    <bean id="oauth2AuthenticationFilter"
+          class="org.springframework.security.oauth2.client.filter.OAuth2ClientAuthenticationProcessingFilter">
+        <constructor-arg name="defaultFilterProcessesUrl" value="/login"/>
+        <!-- This should match whatever you have configured in the login entry point above -->
+        <property name="restTemplate" ref="restTemplate"/>
+        <property name="tokenServices" ref="remoteTokenServices"/>
+    </bean>
+
+    <oauth:rest-template id="restTemplate" resource="oauth2Token"/>
+    <oauth:resource id="oauth2Token" type="authorization_code" client-id="${uaa.client.id}"
+                    client-secret="${uaa.client.secret}"
+                    access-token-uri="${uaa.accessToken.url}" user-authorization-uri="${uaa.userAuthorize.url}"/>
+
+    <bean id="remoteTokenServices" class="org.cloudfoundry.identity.uaa.oauth.RemoteTokenServices">
+        <property name="checkTokenEndpointUrl" value="${uaa.checkToken.url}"/>
+        <property name="clientId" value="${uaa.client.id}"/>
+        <property name="clientSecret" value="${uaa.client.secret}"/>
+    </bean>
+
+</beans>
