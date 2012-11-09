@@ -16,11 +16,16 @@
     <sec:authentication-manager alias="emptyAuthenticationManager"/>
 
     <!-- Default Oauth2 access denied handler -->
-    <bean id="oauthAccessDeniedHandler"
-          class="org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler"/>
+    <bean id="oauthAccessDeniedHandler" class="com.cloudfoundry.dashboard.authentication.RedirectAccessDeniedHandler">
+        <property name="redirectUrl" value="logout?access_denied=true" />
+    </bean>
+
+    <!-- use a handler that forwards to a logout success page instead of redirection -->
+    <bean id="logoutSuccessHandler" class="com.cloudfoundry.dashboard.authentication.ForwardingLogoutHandler" />
 
     <!-- list all unsecured resources/endpoints -->
-    <sec:http pattern="/logout.html" security="none"/>
+    <sec:http pattern="/logout.jsp" security="none"/>
+    <sec:http pattern="/login_error.jsp" security="none"/>
 
     <!-- make ALL other requests go thru the Oauth security filters -->
     <http pattern="/**" create-session="always" entry-point-ref="oauthAuthenticationEntryPoint"
@@ -33,7 +38,7 @@
         <!-- The filter that validates an Oauth token and loads an Oauth2Authentication object in the SecurityContextHolder -->
         <custom-filter ref="oauth2AuthenticationFilter" before="FILTER_SECURITY_INTERCEPTOR"/>
         <access-denied-handler ref="oauthAccessDeniedHandler"/>
-        <logout logout-url="/logout" logout-success-url="/logout.html"/>
+        <logout success-handler-ref="logoutSuccessHandler" logout-url="/logout"/>
     </http>
 
     <oauth:client id="oauth2RedirectForAccessTokenFilter"/>
