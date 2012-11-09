@@ -4,20 +4,20 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 
 <html>
-<head><title>Access Denied</title></head>
+<head><title>Dashboard Logout</title></head>
 <body>
 
 <%
-    if (request.getAttribute(WebAttributes.ACCESS_DENIED_403) != null) {
+    if (request.getParameter("access_denied") != null && "true".equals(request.getParameter("access_denied").toLowerCase())) {
 %>
 <div class="error">
     <h3>
         <p>
-            <%= ((AccessDeniedException)request.getAttribute(WebAttributes.ACCESS_DENIED_403)).getMessage() %>
+            Access is denied
         </p>
     </h3>
     <p>
-        Oops! It looks like you don't have the necessary authorizations to access this resource. Click <a href="logout">here</a> to logout of Dashboard.
+        Oops! It looks like you don't have the necessary authorizations to access this resource.
         <br />
         <b>Please contact your system administrator for access permissions before trying again!</b> <br />
     </p>
@@ -25,6 +25,13 @@
 <%
     }
 %>
+
+<div class="logout">
+    <p>
+        You have been logged out of Dashboard,
+        click <a href="<%= request.getAttribute("uaaUrl") + "/logout.do" %>">here</a> to logout of CloudFoundry too.
+    </p>
+</div>
 
 </body>
 </html>
