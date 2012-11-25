@@ -32,6 +32,7 @@
     <!-- list all unsecured resources/endpoints -->
     <sec:http pattern="/logout.*" security="none"/>
     <sec:http pattern="/login_error.jsp" security="none"/>
+    <sec:http pattern="/favicon.ico" security="none" />
 
     <!-- make ALL other requests go thru the Oauth security filters -->
     <http pattern="/**" create-session="always" entry-point-ref="oauthAuthenticationEntryPoint"
