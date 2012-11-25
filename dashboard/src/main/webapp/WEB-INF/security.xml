@@ -24,7 +24,7 @@
     <bean id="logoutSuccessHandler" class="com.cloudfoundry.dashboard.authentication.ForwardingLogoutHandler">
         <property name="logoutPageAttributes">
             <map key-type="java.lang.String" value-type="java.lang.String">
-                <entry key="uaaUrl" value="${uaa.url}" />
+                <entry key="sloUrl" value="${uaa.logout.url}" />
             </map>
         </property>
     </bean>
@@ -32,6 +32,7 @@
     <!-- list all unsecured resources/endpoints -->
     <sec:http pattern="/logout.*" security="none"/>
     <sec:http pattern="/login_error.jsp" security="none"/>
+    <sec:http pattern="/favicon.ico" security="none" />
 
     <!-- make ALL other requests go thru the Oauth security filters -->
     <http pattern="/**" create-session="always" entry-point-ref="oauthAuthenticationEntryPoint"

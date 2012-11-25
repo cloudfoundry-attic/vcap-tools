@@ -1,5 +1,4 @@
-<%@ page import="org.springframework.security.web.WebAttributes" %>
-<%@ page import="org.springframework.security.access.AccessDeniedException" %>
+<%@ page import="java.net.URLEncoder" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 
@@ -32,7 +31,7 @@
         <%
             if (request.getParameter("slo") == null || "false".equals(request.getParameter("slo").toLowerCase())) {
                 String callbackUrl = request.getRequestURL().append("?slo=true").toString();
-                String sloUrl = request.getAttribute("uaaUrl") != null ? request.getAttribute("uaaUrl") + "/logout.do?redirect=" + response.encodeRedirectURL(callbackUrl) : "logout?slo=true";
+                String sloUrl = request.getAttribute("sloUrl") != null ? request.getAttribute("sloUrl") + "?redirect=" + URLEncoder.encode(callbackUrl, "utf-8") : "logout?slo=true";
         %>
         <br />
         Click <a href="<%= sloUrl %>">here</a> to logout of CloudFoundry too.
