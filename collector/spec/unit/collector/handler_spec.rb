@@ -64,16 +64,51 @@ describe Collector::Handler do
       handler.send_metric("some_key", 2, {:tag => "value"})
     end
 
-    it "integrates with TSDB historians" do
-      connection = double('EventMachine')
-      EventMachine.should_receive(:connect).and_return(connection)
-      connection.should_receive(:send_data).with("put some_key 10000 2 index=1 job=Test tag=value\n")
-      Collector::Config.logger.should_receive(:debug1).with("put some_key 10000 2 index=1 job=Test tag=value\n")
+    context "TSDB" do
+      before do
+        connection = double('EventMachine')
+        EventMachine.should_receive(:connect).and_return(connection)
+        connection.should_receive(:send_data).with("put some_key 10000 2 index=1 job=Test tag=value\n")
+        Collector::Config.logger.should_receive(:debug1).with("put some_key 10000 2 index=1 job=Test tag=value\n")
+      end
 
-      historian = Collector::Historian::Tsdb.new("host", 1234)
-      handler = Collector::Handler.handler(historian, "Test", 1, 10000)
+      it "integrates with TSDB historians" do
+        historian = Collector::Historian::Tsdb.new("host", 1234)
+        handler = Collector::Handler.handler(historian, "Test", 1, 10000)
 
-      handler.send_metric("some_key", 2, {:tag => "value"})
+        handler.send_metric("some_key", 2, {:tag => "value"})
+      end
+    end
+
+    context "CloudWatch" do
+      before do
+        AWS.should_receive(:config)
+
+        cloud_watch = double('Cloud Watch')
+        cloud_watch.should_receive(:put_metric_data).with({
+            namespace: "CF/Collector",
+            metric_data: [
+                {
+                    metric_name: "some_key",
+                    value: "2",
+                    timestamp: "2013-03-07T19:13:28Z",
+                    dimensions: [
+                        {name: "tag", value: "value"},
+                        {name: "job", value: "Test"},
+                        {name: "index", value: "1"},
+                        {name: "deployment", value: "staging"},
+                    ]
+                }]
+        })
+        AWS::CloudWatch.should_receive(:new).and_return(cloud_watch)
+      end
+
+      it "integrates with CloudWatch historians" do
+        historian = Collector::Historian::CloudWatch.new("access", "secret")
+        handler = Collector::Handler.handler(historian, "Test", 1, 1362683608)
+
+        handler.send_metric("some_key", 2, {:tag => "value"})
+      end
     end
   end
 

@@ -1,0 +1,92 @@
+require File.expand_path("../../../spec_helper", File.dirname(__FILE__))
+
+describe Collector::Historian::CloudWatch do
+  describe "initialization" do
+    it "configures AWS credentials" do
+      AWS.should_receive(:config).with({
+                                           access_key_id: "ACCESS",
+                                           secret_access_key: "SECRET"
+                                       })
+
+      described_class.new("ACCESS", "SECRET")
+    end
+  end
+
+  describe "sending data to CloudWatch" do
+    let(:cloud_watch) { double('CloudWatch') }
+
+    before do
+      AWS::CloudWatch.should_receive(:new).and_return(cloud_watch)
+    end
+
+    it "converts the properties hash into a cloud watch command" do
+      cloud_watch_historian = described_class.new("ACCESS", "SECRET")
+
+      cloud_watch.should_receive(:put_metric_data).with({
+                                                            namespace: "CF/Collector",
+                                                            metric_data: [
+                                                                {
+                                                                    metric_name: "some_key",
+                                                                    value: "2",
+                                                                    timestamp: "2013-03-07T19:13:28Z",
+                                                                    dimensions: [
+                                                                        {name: "job", value: "Test"},
+                                                                        {name: "index", value: "1"},
+                                                                        {name: "component", value: "unknown"},
+                                                                        {name: "service_type", value: "unknown"},
+                                                                        {name: "tag", value: "value"},
+                                                                        {name: "deployment", value: "staging"},
+                                                                    ]
+                                                                }]
+                                                        })
+
+      cloud_watch_historian.send_data({
+                                   key: "some_key",
+                                   timestamp: 1362683608,
+                                   value: 2,
+                                   tags: {
+                                       job: "Test",
+                                       index: 1,
+                                       component: "unknown",
+                                       service_type: "unknown",
+                                       tag: "value"
+                                   }
+                               })
+    end
+
+    it "converts different structure of tags" do
+      cloud_watch_historian = described_class.new("ACCESS", "SECRET")
+
+      cloud_watch.should_receive(:put_metric_data).with({
+                                                            namespace: "CF/Collector",
+                                                            metric_data: [
+                                                                {
+                                                                    metric_name: "some_key",
+                                                                    value: "2",
+                                                                    timestamp: "2013-03-07T19:13:28Z",
+                                                                    dimensions: [
+                                                                        {name: "job", value: "Test"},
+                                                                        {name: "index", value: "1"},
+                                                                        {name: "plan", value: "free"},
+                                                                        {name: "service_type", value: "unknown"},
+                                                                        {name: "tag", value: "value"},
+                                                                        {name: "deployment", value: "staging"},
+                                                                    ]
+                                                                }]
+                                                        })
+
+      cloud_watch_historian.send_data({
+                                          key: "some_key",
+                                          timestamp: 1362683608,
+                                          value: 2,
+                                          tags: {
+                                              job: "Test",
+                                              index: 1,
+                                              plan: "free",
+                                              service_type: "unknown",
+                                              tag: "value"
+                                          }
+                                      })
+    end
+  end
+end

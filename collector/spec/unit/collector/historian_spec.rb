@@ -46,5 +46,3 @@ describe Collector::Historian do
     end
   end
 end
-
-
