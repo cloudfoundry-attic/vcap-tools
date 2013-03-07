@@ -52,11 +52,27 @@ describe Collector::Handler do
   end
 
   describe :send_metric do
-    it "should send the metric to the TSDB server" do
-      connection = mock(:TsdbConnection)
-      connection.should_receive(:send_data).
-          with("put some_key 10000 2 index=1 job=Test tag=value\n")
-      handler = Collector::Handler.handler(connection, "Test", 1, 10000)
+    it "should send the metric to the Historian" do
+      historian = mock('Historian')
+      historian.should_receive(:send_data).
+          with({key: "some_key",
+                timestamp: 10000,
+                value: 2,
+                tags: {index: 1, job: "Test", tag: "value"}})
+
+      handler = Collector::Handler.handler(historian, "Test", 1, 10000)
+      handler.send_metric("some_key", 2, {:tag => "value"})
+    end
+
+    it "integrates with TSDB historians" do
+      connection = double('EventMachine')
+      EventMachine.should_receive(:connect).and_return(connection)
+      connection.should_receive(:send_data).with("put some_key 10000 2 index=1 job=Test tag=value\n")
+      Collector::Config.logger.should_receive(:debug1).with("put some_key 10000 2 index=1 job=Test tag=value\n")
+
+      historian = Collector::Historian::Tsdb.new("host", 1234)
+      handler = Collector::Handler.handler(historian, "Test", 1, 10000)
+
       handler.send_metric("some_key", 2, {:tag => "value"})
     end
   end
@@ -65,12 +81,14 @@ describe Collector::Handler do
     it "should send the metric to the TSDB server" do
       connection = mock(:TsdbConnection)
       connection.should_receive(:send_data).
-          with("put latency_key 10000 5 index=1 job=Test tag=value\n")
+          with({key: "latency_key",
+                timestamp: 10000,
+                value: 5,
+                tags: {index: 1, job: "Test", tag: "value"}})
       handler = Collector::Handler.handler(connection, "Test", 1, 10000)
       handler.send_latency_metric("latency_key",
                                   {"value" => 10, "samples" => 2},
                                   {:tag => "value"})
     end
   end
-
 end

@@ -2,8 +2,8 @@
 
 module Collector
   class ServiceHandler < Handler
-    def initialize(tsdb_connection, job, index, now)
-      super(tsdb_connection, job, index, now)
+    def initialize(historian, job, index, now)
+      super(historian, job, index, now)
     end
 
     def send_metric(name, value, tags = {})

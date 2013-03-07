@@ -10,6 +10,8 @@ module Collector
         :logger,
         :tsdb_host,
         :tsdb_port,
+        :aws_access_key_id,
+        :aws_secret_access_key,
         :nats_uri,
         :discover_interval,
         :varz_interval,
@@ -21,6 +23,14 @@ module Collector
 
       OPTIONS.each { |option| attr_accessor option }
 
+      def tsdb
+        tsdb_host && tsdb_port
+      end
+
+      def aws_cloud_watch
+        aws_access_key_id && aws_secret_access_key
+      end
+
       # Configures the various attributes
       #
       # @param [Hash] config the config Hash
@@ -29,8 +39,14 @@ module Collector
         VCAP::Logging.setup_from_config(config["logging"])
         @logger = VCAP::Logging.logger("collector")
 
-        @tsdb_host = config["tsdb"]["host"]
-        @tsdb_port = config["tsdb"]["port"]
+        tsdb_config = config["tsdb"] || {}
+        @tsdb_host = tsdb_config["host"]
+        @tsdb_port = tsdb_config["port"]
+
+        aws_config = config["aws_cloud_watch"] || {}
+        @aws_access_key_id = aws_config["access_key_id"]
+        @aws_secret_access_key = aws_config["secret_access_key"]
+
         @nats_uri = config["mbus"]
 
         intervals = config["intervals"]

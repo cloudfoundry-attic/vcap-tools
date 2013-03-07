@@ -18,6 +18,7 @@ require "collector/config"
 require "collector/handler"
 require "collector/service_handler"
 require "collector/tsdb_connection"
+require "collector/historian"
 
 module Collector
 
@@ -80,8 +81,7 @@ module Collector
       @service_auxiliary_components = Set.new([SERIALIZATION_DATA_SERVER,
                                                BACKUP_MANAGER])
 
-      @tsdb_connection = EventMachine.connect(
-          Config.tsdb_host, Config.tsdb_port, TsdbConnection)
+      @historian = ::Collector::Historian.build
       @nats_latency = VCAP::RollingMetric.new(60)
 
       NATS.on_error do |e|
@@ -173,7 +173,7 @@ module Collector
 
     # Generates metrics that don't require any interactions with varz or healthz
     def send_local_metrics
-      handler = Handler.handler(@tsdb_connection, "collector", Config.index,
+      handler = Handler.handler(@historian, "collector", Config.index,
                                 Time.now.to_i)
       handler.send_latency_metric("nats.latency.1m", @nats_latency.value)
     end
@@ -195,7 +195,7 @@ module Collector
               varz = Yajl::Parser.parse(http.response)
               now = Time.now.to_i
 
-              handler = Handler.handler(@tsdb_connection, job, index, now)
+              handler = Handler.handler(@historian, job, index, now)
               if varz["mem"]
                 handler.send_metric("mem", varz["mem"] / 1024,
                                     get_job_tags(job))
@@ -225,7 +225,7 @@ module Collector
           http.callback do
             begin
               now = Time.now.to_i
-              handler = Handler.handler(@tsdb_connection, job, index, now)
+              handler = Handler.handler(@historian, job, index, now)
               is_healthy = http.response.strip.downcase == "ok" ? 1 : 0
               handler.send_metric("healthy", is_healthy, get_job_tags(job))
             rescue => e

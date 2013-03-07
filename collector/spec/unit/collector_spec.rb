@@ -9,22 +9,20 @@ describe Collector::Collector do
     Collector::Config.tsdb_port = 14242
     Collector::Config.nats_uri = "nats://foo:bar@nats-host:14222"
 
-    tsdb_connection = mock(:TsdbConnection)
     EventMachine.should_receive(:connect).
-        with("dummy", 14242, Collector::TsdbConnection).
-        and_return(tsdb_connection)
+        with("dummy", 14242, Collector::TsdbConnection)
 
     nats_connection = mock(:NatsConnection)
     NATS.should_receive(:connect).
         with(:uri => "nats://foo:bar@nats-host:14222").
         and_return(nats_connection)
 
-    yield Collector::Collector.new, tsdb_connection, nats_connection
+    yield Collector::Collector.new, nats_connection
   end
 
   describe :process_component_discovery do
     it "should record components when they announce themeselves" do
-      create_fake_collector do |collector, _, _|
+      create_fake_collector do |collector, _|
         components = collector.instance_eval { @components }
         components.should be_empty
 
@@ -94,7 +92,7 @@ describe Collector::Collector do
 
   describe :fetch_varz do
     def test_varz
-      create_fake_collector do |collector, tsdb_connection, _|
+      create_fake_collector do |collector, _|
         collector.process_component_discovery(Yajl::Encoder.encode({
           "type" => "Test",
           "index" => 1,
@@ -127,7 +125,7 @@ describe Collector::Collector do
         yield(http_request, handler)
 
         Collector::Handler.should_receive(:handler).
-            with(tsdb_connection, "Test", 1, kind_of(Fixnum)).
+            with(kind_of(Collector::Historian::Tsdb), "Test", 1, kind_of(Fixnum)).
             and_return(handler)
         callback.call
       end
@@ -161,7 +159,7 @@ describe Collector::Collector do
   describe :fetch_healthz do
 
     def setup_healthz_request
-      create_fake_collector do |collector, tsdb_connection, _|
+      create_fake_collector do |collector, _|
         collector.process_component_discovery(Yajl::Encoder.encode({
           "type" => "Test",
           "index" => 1,
@@ -195,7 +193,7 @@ describe Collector::Collector do
         yield http_request, handler
 
         Collector::Handler.should_receive(:handler).
-            with(tsdb_connection, "Test", 1, kind_of(Fixnum)).
+            with(kind_of(Collector::Historian::Tsdb), "Test", 1, kind_of(Fixnum)).
             and_return(handler)
         callback.call
       end
@@ -232,7 +230,7 @@ describe Collector::Collector do
         yield handler
 
         Collector::Handler.should_receive(:handler).
-          with(tsdb, "collector", 0, 1000).
+          with(kind_of(Collector::Historian::Tsdb), "collector", 0, 1000).
           and_return(handler)
 
         collector.send_local_metrics
