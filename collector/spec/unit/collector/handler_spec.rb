@@ -96,6 +96,7 @@ describe Collector::Handler do
                         {name: "tag", value: "value"},
                         {name: "job", value: "Test"},
                         {name: "index", value: "1"},
+                        {name: "name", value: "Test/1"},
                         {name: "deployment", value: "staging"},
                     ]
                 }]

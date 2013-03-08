@@ -26,7 +26,7 @@ describe Collector::Historian::CloudWatch do
                                                             namespace: "CF/Collector",
                                                             metric_data: [
                                                                 {
-                                                                    metric_name: "some_key",
+                                                                    metric_name: "some_metric/some_key",
                                                                     value: "2",
                                                                     timestamp: "2013-03-07T19:13:28Z",
                                                                     dimensions: [
@@ -35,13 +35,14 @@ describe Collector::Historian::CloudWatch do
                                                                         {name: "component", value: "unknown"},
                                                                         {name: "service_type", value: "unknown"},
                                                                         {name: "tag", value: "value"},
+                                                                        {name: "name", value: "Test/1"},
                                                                         {name: "deployment", value: "staging"},
                                                                     ]
                                                                 }]
                                                         })
 
       cloud_watch_historian.send_data({
-                                   key: "some_key",
+                                   key: "some_metric.some_key",
                                    timestamp: 1362683608,
                                    value: 2,
                                    tags: {
@@ -70,6 +71,7 @@ describe Collector::Historian::CloudWatch do
                                                                         {name: "plan", value: "free"},
                                                                         {name: "service_type", value: "unknown"},
                                                                         {name: "tag", value: "value"},
+                                                                        {name: "name", value: "Test/1"},
                                                                         {name: "deployment", value: "staging"},
                                                                     ]
                                                                 }]

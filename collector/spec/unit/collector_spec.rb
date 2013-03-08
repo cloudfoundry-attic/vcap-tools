@@ -125,7 +125,7 @@ describe Collector::Collector do
         yield(http_request, handler)
 
         Collector::Handler.should_receive(:handler).
-            with(kind_of(Collector::Historian::Tsdb), "Test", 1, kind_of(Fixnum)).
+            with(kind_of(Collector::Historian), "Test", 1, kind_of(Fixnum)).
             and_return(handler)
         callback.call
       end
@@ -193,7 +193,7 @@ describe Collector::Collector do
         yield http_request, handler
 
         Collector::Handler.should_receive(:handler).
-            with(kind_of(Collector::Historian::Tsdb), "Test", 1, kind_of(Fixnum)).
+            with(kind_of(Collector::Historian), "Test", 1, kind_of(Fixnum)).
             and_return(handler)
         callback.call
       end
@@ -230,7 +230,7 @@ describe Collector::Collector do
         yield handler
 
         Collector::Handler.should_receive(:handler).
-          with(kind_of(Collector::Historian::Tsdb), "collector", 0, 1000).
+          with(kind_of(Collector::Historian), "collector", 0, 1000).
           and_return(handler)
 
         collector.send_local_metrics

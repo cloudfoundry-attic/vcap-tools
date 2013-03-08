@@ -1,7 +1,7 @@
 require 'collector/tsdb_connection'
 
 module Collector
-  module Historian
+  class Historian
     class Tsdb
       attr_reader :connection
       def initialize(host, port)
