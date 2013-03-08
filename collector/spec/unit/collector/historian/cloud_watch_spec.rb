@@ -26,7 +26,7 @@ describe Collector::Historian::CloudWatch do
                                                             namespace: "CF/Collector",
                                                             metric_data: [
                                                                 {
-                                                                    metric_name: "some_metric/some_key",
+                                                                    metric_name: "some_metric.some_key",
                                                                     value: "2",
                                                                     timestamp: "2013-03-07T19:13:28Z",
                                                                     dimensions: [
@@ -36,7 +36,7 @@ describe Collector::Historian::CloudWatch do
                                                                         {name: "service_type", value: "unknown"},
                                                                         {name: "tag", value: "value"},
                                                                         {name: "name", value: "Test/1"},
-                                                                        {name: "deployment", value: "staging"},
+                                                                        {name: "deployment", value: "dev113cw"},
                                                                     ]
                                                                 }]
                                                         })
@@ -72,7 +72,7 @@ describe Collector::Historian::CloudWatch do
                                                                         {name: "service_type", value: "unknown"},
                                                                         {name: "tag", value: "value"},
                                                                         {name: "name", value: "Test/1"},
-                                                                        {name: "deployment", value: "staging"},
+                                                                        {name: "deployment", value: "dev113cw"},
                                                                     ]
                                                                 }]
                                                         })

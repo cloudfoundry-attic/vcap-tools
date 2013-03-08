@@ -75,6 +75,44 @@ describe Collector::Historian do
       historian.should respond_to :send_data
     end
   end
+
+  describe "when sending data" do
+    let(:config_override) do
+      {
+          "intervals" => {},
+          "logging" => {},
+          'aws_cloud_watch' => {
+              'access_key_id' => "AWS_ACCESS_KEY12345",
+              'secret_access_key' => "AWS_SECRET_ACCESS_KEY98765"
+          },
+          'tsdb' => {
+              'port' => 4242,
+              'host' => "localhost"
+          }
+      }
+    end
+
+    let(:connection) { double('Connection') }
+    let(:cloud_watch) { double('Cloud Watch') }
+
+    before do
+      AWS.should_receive(:config)
+      AWS::CloudWatch.should_receive(:new).and_return(cloud_watch)
+
+      EventMachine.should_receive(:connect).and_return(connection)
+    end
+
+    context "when one of the historians fail" do
+      before do
+        connection.should_receive(:send_data).and_raise("FAIL")
+      end
+
+      it "should still send data to the other historians" do
+        cloud_watch.should_receive(:put_metric_data)
+
+        historian = described_class.build
+        expect { historian.send_data({tags: {}}) }.to_not raise_error
+      end
+    end
+  end
 end
-
-

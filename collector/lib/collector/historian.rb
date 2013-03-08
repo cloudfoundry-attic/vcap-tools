@@ -19,7 +19,13 @@ module Collector
     end
 
     def send_data(data)
-      adapters.each { |adapter| adapter.send_data(data) }
+      adapters.each do |adapter|
+        begin
+          adapter.send_data(data)
+        rescue => e
+          ::Collector::Config.logger.warn("Error sending data to #{adapter.class.name}: #{e.inspect} - #{e.message}")
+        end
+      end
     end
 
     def add_adapter(adapter)

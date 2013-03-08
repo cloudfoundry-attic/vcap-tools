@@ -17,3 +17,8 @@ Collector::Config.configure({
   "intervals" => {}
 })
 
+RSpec.configure do |c|
+  c.before do
+    EventMachine.should_receive(:defer).any_number_of_times.and_yield
+  end
+end
