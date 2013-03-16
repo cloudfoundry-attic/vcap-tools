@@ -15,7 +15,7 @@ module Collector
         dimensions = data[:tags].map {|key, value| {name: key.to_s, value: value.to_s } }
 
         dimensions << {name: "name", value: "#{data[:tags][:job]}/#{data[:tags][:index]}"}
-        dimensions << {name: "deployment", value: "dev113cw"}  # hardcode deployment to "staging"
+        dimensions << {name: "deployment", value: Config.deployment_name}
 
         metric = {
             namespace: "CF/Collector",

@@ -107,6 +107,7 @@ describe Collector::Handler do
       it "integrates with CloudWatch historians" do
         historian = Collector::Historian::CloudWatch.new("access", "secret")
         handler = Collector::Handler.handler(historian, "Test", 1, 1362683608)
+        ::Collector::Config.stub(:deployment_name).and_return("dev113cw")
 
         handler.send_metric("some_key", 2, {:tag => "value"})
       end

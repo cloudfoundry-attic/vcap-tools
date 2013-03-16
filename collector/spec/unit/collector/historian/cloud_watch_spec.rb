@@ -17,6 +17,7 @@ describe Collector::Historian::CloudWatch do
 
     before do
       AWS::CloudWatch.should_receive(:new).and_return(cloud_watch)
+      ::Collector::Config.stub(:deployment_name).and_return("dev114cw")
     end
 
     it "converts the properties hash into a cloud watch command" do
@@ -36,7 +37,7 @@ describe Collector::Historian::CloudWatch do
                                                                         {name: "service_type", value: "unknown"},
                                                                         {name: "tag", value: "value"},
                                                                         {name: "name", value: "Test/1"},
-                                                                        {name: "deployment", value: "dev113cw"},
+                                                                        {name: "deployment", value: "dev114cw"},
                                                                     ]
                                                                 }]
                                                         })
@@ -72,7 +73,7 @@ describe Collector::Historian::CloudWatch do
                                                                         {name: "service_type", value: "unknown"},
                                                                         {name: "tag", value: "value"},
                                                                         {name: "name", value: "Test/1"},
-                                                                        {name: "deployment", value: "dev113cw"},
+                                                                        {name: "deployment", value: "dev114cw" },
                                                                     ]
                                                                 }]
                                                         })

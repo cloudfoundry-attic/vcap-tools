@@ -18,7 +18,8 @@ module Collector
         :healthz_interval,
         :prune_interval,
         :nats_ping_interval,
-        :local_metrics_interval
+        :local_metrics_interval,
+        :deployment_name
       ]
 
       OPTIONS.each { |option| attr_accessor option }
@@ -46,6 +47,7 @@ module Collector
         aws_config = config["aws_cloud_watch"] || {}
         @aws_access_key_id = aws_config["access_key_id"]
         @aws_secret_access_key = aws_config["secret_access_key"]
+        @deployment_name = aws_config["deployment_name"] || "untitled_dev"
 
         @nats_uri = config["mbus"]
 
