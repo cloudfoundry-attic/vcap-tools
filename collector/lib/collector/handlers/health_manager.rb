@@ -1,10 +1,8 @@
 # Copyright (c) 2009-2012 VMware, Inc.
-
 module Collector
   class Handler
     class HealthManager < Handler
       register HEALTH_MANAGER_COMPONENT
-
       METRICS = {
               "total" => {
                       "apps" => "apps",
@@ -26,25 +24,9 @@ module Collector
       def process(varz)
         METRICS.each do |type, metric_map|
           if type_varz = varz[type]
-            if framework_varz = type_varz["frameworks"]
-              framework_varz.each do |framework, metrics|
-                metric_map.each do |varz_name, metric_name|
-                  if metrics[varz_name]
-                    send_metric("frameworks.#{metric_name}", metrics[varz_name],
-                                :framework => framework)
-                  end
-                end
-              end
-            end
-
-            if runtime_varz = type_varz["runtimes"]
-              runtime_varz.each do |runtime, metrics|
-                metric_map.each do |varz_name, metric_name|
-                  if metrics[varz_name]
-                    send_metric("runtimes.#{metric_name}", metrics[varz_name],
-                                :runtime => runtime)
-                  end
-                end
+            metric_map.each do |varz_name, metric_name|
+              if type_varz[varz_name]
+                send_metric("#{type}.#{metric_name}", type_varz[varz_name])
               end
             end
           end

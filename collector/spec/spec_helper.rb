@@ -22,3 +22,20 @@ RSpec.configure do |c|
     EventMachine.should_receive(:defer).any_number_of_times.and_yield
   end
 end
+
+
+def create_fake_collector
+  Collector::Config.tsdb_host = "dummy"
+  Collector::Config.tsdb_port = 14242
+  Collector::Config.nats_uri = "nats://foo:bar@nats-host:14222"
+
+  EventMachine.should_receive(:connect).
+    with("dummy", 14242, Collector::TsdbConnection)
+
+  nats_connection = mock(:NatsConnection)
+  NATS.should_receive(:connect).
+    with(:uri => "nats://foo:bar@nats-host:14222").
+    and_return(nats_connection)
+
+  yield Collector::Collector.new, nats_connection
+end

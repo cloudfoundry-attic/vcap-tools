@@ -4,22 +4,6 @@ require File.expand_path("../spec_helper", File.dirname(__FILE__))
 
 describe Collector::Collector do
 
-  def create_fake_collector
-    Collector::Config.tsdb_host = "dummy"
-    Collector::Config.tsdb_port = 14242
-    Collector::Config.nats_uri = "nats://foo:bar@nats-host:14222"
-
-    EventMachine.should_receive(:connect).
-        with("dummy", 14242, Collector::TsdbConnection)
-
-    nats_connection = mock(:NatsConnection)
-    NATS.should_receive(:connect).
-        with(:uri => "nats://foo:bar@nats-host:14222").
-        and_return(nats_connection)
-
-    yield Collector::Collector.new, nats_connection
-  end
-
   describe :process_component_discovery do
     it "should record components when they announce themeselves" do
       create_fake_collector do |collector, _|
