@@ -12,6 +12,8 @@ module Collector
         :tsdb_port,
         :aws_access_key_id,
         :aws_secret_access_key,
+        :datadog_api_key,
+        :datadog_application_key,
         :nats_uri,
         :discover_interval,
         :varz_interval,
@@ -32,6 +34,10 @@ module Collector
         aws_access_key_id && aws_secret_access_key
       end
 
+      def datadog
+        datadog_api_key && datadog_application_key
+      end
+
       # Configures the various attributes
       #
       # @param [Hash] config the config Hash
@@ -40,6 +46,8 @@ module Collector
         VCAP::Logging.setup_from_config(config["logging"])
         @logger = VCAP::Logging.logger("collector")
 
+        @deployment_name = config["deployment_name"] || "untitled_dev"
+
         tsdb_config = config["tsdb"] || {}
         @tsdb_host = tsdb_config["host"]
         @tsdb_port = tsdb_config["port"]
@@ -47,7 +55,10 @@ module Collector
         aws_config = config["aws_cloud_watch"] || {}
         @aws_access_key_id = aws_config["access_key_id"]
         @aws_secret_access_key = aws_config["secret_access_key"]
-        @deployment_name = aws_config["deployment_name"] || "untitled_dev"
+
+        datadog_config = config["datadog"] || {}
+        @datadog_api_key = datadog_config["api_key"]
+        @datadog_application_key = datadog_config["application_key"]
 
         @nats_uri = config["mbus"]
 

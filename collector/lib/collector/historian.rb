@@ -1,4 +1,5 @@
 require_relative "./historian/cloud_watch"
+require_relative "./historian/data_dog"
 require_relative "./historian/tsdb"
 
 module Collector
@@ -14,6 +15,12 @@ module Collector
       if Config.aws_cloud_watch
         historian.add_adapter(Historian::CloudWatch.new(Config.aws_access_key_id, Config.aws_secret_access_key))
         ::Collector::Config.logger.info("Adding historian adapter for CloudWatch with AWS access key #{Config.aws_access_key_id}")
+      end
+
+      if Config.datadog
+        historian.add_adapter(Historian::DataDog.new(Config.datadog_api_key, Config.datadog_application_key))
+        ::Collector::Config.logger.info("Adding historian adapter for DataDog with api key #{Config.datadog_api_key} " \
+                                        "and application key #{Config.datadog_application_key}")
       end
 
       historian
