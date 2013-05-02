@@ -184,11 +184,12 @@ module Collector
       @components.each do |job, instances|
         instances.each do |index, instance|
           next unless credentials_ok?(job, instance)
-          varz_uri = "http://#{instance[:host]}/varz"
+          host = instance[:host]
+          varz_uri = "http://#{host}/varz"
           http = EventMachine::HttpRequest.new(varz_uri).get(
                   :head => authorization_headers(instance))
           http.errback do
-            @logger.warn("Failed fetching varz from: #{instance[:host]}")
+            @logger.warn("Failed fetching varz from: #{host}")
           end
           http.callback do
             begin
@@ -202,7 +203,7 @@ module Collector
               end
               handler.process(varz)
             rescue => e
-              @logger.warn("Error processing varz: #{e.message}")
+              @logger.warn("Error processing varz: #{e.message}; fetched from #{host}")
               @logger.warn(e)
             end
           end
