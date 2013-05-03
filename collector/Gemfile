@@ -2,11 +2,8 @@ source :rubygems
 
 gem "rake"
 gem "nats"
-gem "em-http-request"
-gem "eventmachine", "~> 0.12.11.cloudfoundry.3"
-gem "vcap_common", "~> 1.0.3"
+gem "vcap_common"
 gem "vcap_logging"
-gem "yajl-ruby"
 gem "aws-sdk", :require => false
 gem "dogapi", "~> 1.6.0"
 
