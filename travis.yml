@@ -1,4 +1,5 @@
 rvm:
   "1.9.3"
 before_install:
+  - "echo 'I am a banana!'"
   - "cd collector"
