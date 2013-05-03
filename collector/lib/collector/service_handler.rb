@@ -40,6 +40,9 @@ module Collector
         send_metric("services.plans.score", plan["score"] || 0, :plan => plan["plan"])
         send_metric("services.plans.allow_over_provisioning",
                     plan["allow_over_provisioning"] ? 1 : 0, :plan => plan["plan"])
+        send_metric("services.plans.max_capacity", plan["max_capacity"] || 0, :plan => plan["plan"])
+        send_metric("services.plans.used_capacity", plan["used_capacity"] || 0, :plan => plan["plan"])
+        send_metric("services.plans.available_capacity", plan["available_capacity"] || 0, :plan => plan["plan"])
       end if varz["plans"]
     end
 
