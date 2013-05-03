@@ -3,24 +3,17 @@
 require File.expand_path("../../spec_helper", File.dirname(__FILE__))
 
 describe Collector::ServiceHandler do
-
-  describe :send_metric do
-    it "should send the metric to the TSDB server with service & component" \
-       "tag" do
+  describe "#send_metric" do
+    it "should send the metric to the TSDB server with service & component tag" do
       historian = mock("Historian")
-      historian.should_receive(:send_data).
-        with({
-        key: "some_key",
-        timestamp: 10_000,
-        value: 2,
-        tags: {
-          index: 1,
-          component: "unknown",
-          service_type: "unknown",
-          job: "Test",
-          tag: "value"
-        }
-      })
+      historian.should_receive(:send_data).with(
+        hash_including(
+          tags: hash_including(
+            component: "unknown",
+            service_type: "unknown",
+          )
+        )
+      )
       handler = Collector::ServiceHandler.new(historian, "Test", 1, 10000)
       handler.send_metric("some_key", 2, {:tag => "value"})
     end
