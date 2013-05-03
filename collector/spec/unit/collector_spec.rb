@@ -88,7 +88,7 @@ describe Collector::Collector do
         http_request.should_receive(:errback)
 
         callback = nil
-        http_request.should_receive(:callback).and_return do |block|
+        http_request.should_receive(:callback) do |&block|
           callback = block
         end
 
@@ -155,7 +155,7 @@ describe Collector::Collector do
         http_request.should_receive(:errback)
 
         callback = nil
-        http_request.should_receive(:callback).and_return do |block|
+        http_request.should_receive(:callback) do |&block|
           callback = block
         end
 
