@@ -55,16 +55,18 @@ describe Collector::ServiceHandler do
     end
   end
 
-  describe :process_plan_score_metric do
-    it "should report low_water & high_water & score metric to TSDB server" do
-      historian = mock("Historian")
-      data = []
-      historian.stub(:send_data) do |args|
-        data << args
+  describe "#process_plan_score_metric" do
+    let(:history_data) { Hash.new { |h, k| h.store(k, []) } }
+    let(:historian) do
+      double("Historian").tap do |h|
+        h.stub(:send_data) do |data|
+          name = data.fetch(:key)
+          history_data[name] << data
+        end
       end
-
-      handler = Collector::ServiceHandler.new(historian, "Test", 1, 10000)
-      varz = {
+    end
+    let(:varz) do
+      {
         "plans" => [
           {
             "plan" => "free",
@@ -77,17 +79,28 @@ describe Collector::ServiceHandler do
           }
         ]
       }
-      handler.process_plan_score_metric(varz)
-      data.collect { |o| [o[:key], o[:value]] }.should =~ [
-        ["services.plans.high_water", 1400],
-        ["services.plans.low_water", 100],
-        ["services.plans.score", 150],
-        ["services.plans.allow_over_provisioning", 0],
-        ["services.plans.used_capacity", 50],
-        ["services.plans.max_capacity", 500],
-        ["services.plans.available_capacity", 450]
-      ]
     end
+
+    def self.test_report_metric(metric_name, key, value)
+      it "should report #{key} to TSDB server" do
+        handler = Collector::ServiceHandler.new(historian, "Test", 1, 10000)
+        handler.process_plan_score_metric(varz)
+        history_data.fetch(metric_name).should have(1).item
+        history_data.fetch(metric_name).fetch(0).should include(
+          key: metric_name,
+          value: value,
+        )
+      end
+    end
+
+    test_report_metric("services.plans.low_water", "low_water", 100)
+    test_report_metric("services.plans.high_water", "high_water", 1400)
+    test_report_metric("services.plans.score", "score", 150)
+    test_report_metric("services.plans.allow_over_provisioning", "allow_over_provisioning", 0)
+    test_report_metric("services.plans.used_capacity", "used_capacity", 50)
+    test_report_metric("services.plans.max_capacity", "max_capacity", 500)
+    test_report_metric("services.plans.available_capacity", "available_capacity", 450)
+
   end
 
   describe :process_online_nodes do
