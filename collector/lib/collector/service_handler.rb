@@ -1,4 +1,5 @@
 # Copyright (c) 2009-2012 VMware, Inc.
+require_relative "handler"
 
 module Collector
   class ServiceHandler < Handler
@@ -36,14 +37,14 @@ module Collector
       return unless varz.include?("plans")
       if varz["plans"]
         varz["plans"].each do |plan|
-          send_metric("services.plans.high_water", plan["high_water"] || 0, :plan => plan["plan"])
-          send_metric("services.plans.low_water", plan["low_water"] || 0, :plan => plan["plan"])
-          send_metric("services.plans.score", plan["score"] || 0, :plan => plan["plan"])
-          send_metric("services.plans.allow_over_provisioning",
-            plan["allow_over_provisioning"] ? 1 : 0, :plan => plan["plan"])
-          send_metric("services.plans.max_capacity", plan["max_capacity"] || 0, :plan => plan["plan"])
-          send_metric("services.plans.used_capacity", plan["used_capacity"] || 0, :plan => plan["plan"])
-          send_metric("services.plans.available_capacity", plan["available_capacity"] || 0, :plan => plan["plan"])
+          tags = {
+            :plan => plan["plan"],
+          }
+          allow_over_provisioning = plan.delete("allow_over_provisioning") ? 1 : 0
+          send_metric("services.plans.allow_over_provisioning", allow_over_provisioning, tags)
+          plan.each do |metric_name, value|
+            send_metric("services.plans.#{metric_name}", value, tags)
+          end
         end
       end
     end
