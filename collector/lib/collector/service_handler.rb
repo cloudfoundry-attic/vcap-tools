@@ -34,16 +34,18 @@ module Collector
     #
     def process_plan_score_metric(varz)
       return unless varz.include?("plans")
-      varz["plans"].each do |plan|
-        send_metric("services.plans.high_water", plan["high_water"] || 0, :plan => plan["plan"])
-        send_metric("services.plans.low_water", plan["low_water"] || 0, :plan => plan["plan"])
-        send_metric("services.plans.score", plan["score"] || 0, :plan => plan["plan"])
-        send_metric("services.plans.allow_over_provisioning",
-                    plan["allow_over_provisioning"] ? 1 : 0, :plan => plan["plan"])
-        send_metric("services.plans.max_capacity", plan["max_capacity"] || 0, :plan => plan["plan"])
-        send_metric("services.plans.used_capacity", plan["used_capacity"] || 0, :plan => plan["plan"])
-        send_metric("services.plans.available_capacity", plan["available_capacity"] || 0, :plan => plan["plan"])
-      end if varz["plans"]
+      if varz["plans"]
+        varz["plans"].each do |plan|
+          send_metric("services.plans.high_water", plan["high_water"] || 0, :plan => plan["plan"])
+          send_metric("services.plans.low_water", plan["low_water"] || 0, :plan => plan["plan"])
+          send_metric("services.plans.score", plan["score"] || 0, :plan => plan["plan"])
+          send_metric("services.plans.allow_over_provisioning",
+            plan["allow_over_provisioning"] ? 1 : 0, :plan => plan["plan"])
+          send_metric("services.plans.max_capacity", plan["max_capacity"] || 0, :plan => plan["plan"])
+          send_metric("services.plans.used_capacity", plan["used_capacity"] || 0, :plan => plan["plan"])
+          send_metric("services.plans.available_capacity", plan["available_capacity"] || 0, :plan => plan["plan"])
+        end
+      end
     end
 
     # Get online nodes varz for each service gateway, report the total
