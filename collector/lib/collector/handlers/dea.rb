@@ -5,13 +5,15 @@ module Collector
     class Dea < Handler
       register DEA_COMPONENT
 
+      BYTE_METRICS = %w[used_memory reserved_memory used_disk].freeze
+      B_IN_MB = 1024.freeze
+
       def process(varz)
-        byte_metrics = %w(used_memory reserved_memory used_disk)
         if varz["frameworks"]
           varz["frameworks"].each do |framework, metrics|
-            byte_metrics.each do |metric_name|
+            BYTE_METRICS.each do |metric_name|
               send_metric("frameworks.#{metric_name}",
-                          metrics[metric_name] / 1024, :framework => framework)
+                          metrics[metric_name] / B_IN_MB, :framework => framework)
             end
             send_metric("frameworks.used_cpu", metrics["used_cpu"],
                         :framework => framework)
@@ -20,9 +22,9 @@ module Collector
 
         if varz["runtimes"]
           varz["runtimes"].each do |runtime, metrics|
-            byte_metrics.each do |metric_name|
+            BYTE_METRICS.each do |metric_name|
               send_metric("runtimes.#{metric_name}",
-                          metrics[metric_name] / 1024, :runtime => runtime)
+                          metrics[metric_name] / B_IN_MB, :runtime => runtime)
             end
             send_metric("runtimes.used_cpu", metrics["used_cpu"],
                         :runtime => runtime)

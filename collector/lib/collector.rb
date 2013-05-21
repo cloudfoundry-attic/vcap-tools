@@ -11,7 +11,6 @@ require "bundler/setup"
 require "em-http-request"
 require "eventmachine"
 require "nats/client"
-require "vcap/logging"
 require "vcap/rolling_metric"
 
 require "collector/config"
@@ -21,7 +20,6 @@ require "collector/tsdb_connection"
 require "collector/historian"
 
 module Collector
-
   CLOUD_CONTROLLER_COMPONENT = "CloudController"
   DEA_COMPONENT = "DEA"
   HEALTH_MANAGER_COMPONENT = "HealthManager"
@@ -55,17 +53,14 @@ module Collector
 
   # Varz collector
   class Collector
-    ANNOUNCE_SUBJECT = "vcap.component.announce"
-    DISCOVER_SUBJECT = "vcap.component.discover"
+    ANNOUNCE_SUBJECT = "vcap.component.announce".freeze
+    DISCOVER_SUBJECT = "vcap.component.discover".freeze
+    COLLECTOR_PING = "collector.nats.ping".freeze
 
     # Creates a new varz collector based on the {Config} settings.
-    def initialize
-      Dir[File.join(File.dirname(__FILE__),
-                    "../lib/collector/handlers/*.rb")].each do |file|
-        require File.join("collector/handlers",
-                          File.basename(file, File.extname(file)))
-      end
 
+
+    def initialize
       @logger = Config.logger
 
       @components = {}
@@ -93,18 +88,14 @@ module Collector
       @nats = NATS.connect(:uri => Config.nats_uri) do
         @logger.info("Connected to NATS")
         # Send initially to discover what's already running
-        @nats.subscribe(ANNOUNCE_SUBJECT) do |message|
-          process_component_discovery(message)
-        end
+        @nats.subscribe(ANNOUNCE_SUBJECT) { |message| process_component_discovery(message) }
 
         @inbox = NATS.create_inbox
-        @nats.subscribe(@inbox) {|message| process_component_discovery(message)}
+        @nats.subscribe(@inbox) { |message| process_component_discovery(message) }
 
         @nats.publish(DISCOVER_SUBJECT, "", @inbox)
 
-        @nats.subscribe("collector.nats.ping") do |message|
-          process_nats_ping(message.to_f)
-        end
+        @nats.subscribe(COLLECTOR_PING) { |message| process_nats_ping(message.to_f) }
 
         setup_timers
       end
@@ -125,7 +116,7 @@ module Collector
       end
 
       EM.add_periodic_timer(Config.nats_ping_interval) do
-        @nats.publish("collector.nats.ping", Time.now.to_f.to_s)
+        @nats.publish(COLLECTOR_PING, Time.now.to_f.to_s)
       end
     end
 
@@ -277,4 +268,8 @@ module Collector
     end
 
   end
+end
+
+Dir[File.join(File.dirname(__FILE__), "../lib/collector/handlers/*.rb")].each do |file|
+  require File.join("collector/handlers", File.basename(file, File.extname(file)))
 end

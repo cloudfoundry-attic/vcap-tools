@@ -9,17 +9,19 @@ Bundler.setup(:default, :test)
 
 require "rspec/core"
 
-require "collector"
-
-Collector::Config.configure({
+require "collector/config"
+Collector::Config.configure(
   "logging" => {"level" => ENV["DEBUG"] ? "debug2" : "fatal"},
   "tsdb" => {},
   "intervals" => {}
-})
+)
+
+require "collector"
+
 
 RSpec.configure do |c|
   c.before do
-    EventMachine.should_receive(:defer).any_number_of_times.and_yield
+    EventMachine.stub(:defer).any_number_of_times.and_yield
   end
 end
 
@@ -38,4 +40,17 @@ def create_fake_collector
     and_return(nats_connection)
 
   yield Collector::Collector.new, nats_connection
+end
+
+def fixture(name)
+  Yajl::Parser.parse(File.read(File.expand_path("../fixtures/#{name}.json", __FILE__)))
+end
+
+
+def silence_warnings(&blk)
+  warn_level = $VERBOSE
+  $VERBOSE = nil
+  blk.call
+ensure
+  $VERBOSE = warn_level
 end

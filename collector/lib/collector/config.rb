@@ -1,30 +1,14 @@
-# Copyright (c) 2009-2012 VMware, Inc.
+require "vcap/logging"
 
 module Collector
   # Singleton config used throughout
   class Config
     class << self
-
-      OPTIONS = [
-        :index,
-        :logger,
-        :tsdb_host,
-        :tsdb_port,
-        :aws_access_key_id,
-        :aws_secret_access_key,
-        :datadog_api_key,
-        :datadog_application_key,
-        :nats_uri,
-        :discover_interval,
-        :varz_interval,
-        :healthz_interval,
-        :prune_interval,
-        :nats_ping_interval,
-        :local_metrics_interval,
+      attr_accessor :index, :tsdb_host, :tsdb_port, :aws_access_key_id,
+        :aws_secret_access_key, :datadog_api_key, :datadog_application_key,
+        :nats_uri, :discover_interval, :varz_interval, :healthz_interval,
+        :prune_interval, :nats_ping_interval, :local_metrics_interval,
         :deployment_name
-      ]
-
-      OPTIONS.each { |option| attr_accessor option }
 
       def tsdb
         tsdb_host && tsdb_port
@@ -38,13 +22,19 @@ module Collector
         datadog_api_key && datadog_application_key
       end
 
+      def logger(config={})
+        @logger ||= begin
+          VCAP::Logging.setup_from_config(config)
+          VCAP::Logging.logger("collector")
+        end
+      end
+
       # Configures the various attributes
       #
       # @param [Hash] config the config Hash
       def configure(config)
         @index = config["index"].to_i
-        VCAP::Logging.setup_from_config(config["logging"])
-        @logger = VCAP::Logging.logger("collector")
+        logger(config["logging"])
 
         @deployment_name = config["deployment_name"] || "untitled_dev"
 

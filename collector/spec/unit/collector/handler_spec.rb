@@ -1,57 +1,39 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
-require File.expand_path("../../spec_helper", File.dirname(__FILE__))
+require "spec_helper"
 
 describe Collector::Handler do
-
   describe :register do
-    after(:each) do
-      Collector::Handler.handler_map.clear
-    end
+    after { Collector::Handler.handler_map.clear }
 
     it "should register varz handler plugins" do
-      test_handler = Class.new(Collector::Handler) do
-        register "Test"
-      end
-
-      Collector::Handler.handler_map.should == {"Test" => test_handler}
+      test_handler = Class.new(Collector::Handler) { register "Test" }
+      Collector::Handler.handler_map.should include("Test" => test_handler)
     end
 
 
     it "should fail to register multiple handlers for a single job" do
-      Class.new(Collector::Handler) do
-        register "Test"
-      end
+      Class.new(Collector::Handler) { register "Test" }
 
-      lambda {
-        Class.new(Collector::Handler) do
-          register "Test"
-        end
-      }.should raise_exception "Job: Test already registered"
+      expect {
+        Class.new(Collector::Handler) { register "Test" }
+      }.to raise_exception "Job: Test already registered"
     end
   end
 
   describe :handler do
-    after(:each) do
-      Collector::Handler.handler_map.clear
-    end
+    after { Collector::Handler.handler_map.clear }
 
     it "should return the registered varz handler plugin" do
-      test_handler = Class.new(Collector::Handler) do
-        register "Test"
-      end
-
+      test_handler = Class.new(Collector::Handler) { register "Test" }
       Collector::Handler.handler(nil, "Test", nil, nil).
           should be_kind_of(test_handler)
     end
 
     it "should return the default handler when none registered" do
-      Collector::Handler.handler(nil, "Test", nil, nil).
-          should be_kind_of(Collector::Handler)
+      Collector::Handler.handler(nil, "Test", nil, nil).should be_kind_of(Collector::Handler)
     end
   end
 
-  describe :send_metric do
+  describe "send_metric" do
     it "should send the metric to the Historian" do
       historian = mock('Historian')
       historian.should_receive(:send_data).
@@ -114,7 +96,7 @@ describe Collector::Handler do
     end
   end
 
-  describe :send_latency_metric do
+  describe "send_latency_metric" do
     it "should send the metric to the TSDB server" do
       connection = mock(:TsdbConnection)
       connection.should_receive(:send_data).

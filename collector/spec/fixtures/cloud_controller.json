@@ -1,0 +1,205 @@
+{
+    "vcap_sinatra": {
+        "requests": {
+            "outstanding": 22,
+            "completed": 9828
+        },
+        "http_status": {
+            "100": 0,
+            "101": 3,
+            "200": 9105,
+            "201": 203,
+            "202": 0,
+            "203": 0,
+            "204": 0,
+            "205": 0,
+            "206": 0,
+            "300": 12,
+            "301": 0,
+            "302": 21,
+            "303": 0,
+            "304": 0,
+            "305": 0,
+            "306": 0,
+            "307": 0,
+            "400": 622,
+            "401": 0,
+            "402": 0,
+            "403": 99,
+            "404": 2,
+            "405": 0,
+            "406": 0,
+            "407": 0,
+            "408": 0,
+            "409": 0,
+            "410": 0,
+            "411": 0,
+            "412": 0,
+            "413": 0,
+            "414": 0,
+            "415": 0,
+            "416": 0,
+            "417": 0,
+            "500": 0,
+            "501": 0,
+            "502": 22,
+            "503": 0,
+            "504": 0,
+            "505": 0
+        },
+        "recent_errors": [
+
+        ]
+    },
+    "vcap_sequel": {
+        "connection_pool": {
+            "size": 17,
+            "max_size": 32,
+            "allocated": 5,
+            "available": 12
+        }
+    },
+    "type": "CloudController",
+    "index": 1,
+    "uuid": "d9ff154b0af17f1d8e65ec51143bbdf4",
+    "host": "10.10.16.13:33215",
+    "credentials": [
+        "d4ef64c0f3fa06aeb0c27d3cbc5c2316",
+        "c656945883523052508b2bd5e9ebce9b"
+    ],
+    "start": "2013-05-20 18:07:21 +0000",
+    "num_cores": 1,
+    "config": {
+        "local_route": "10.10.16.13",
+        "port": 9022,
+        "pid_filename": "/var/vcap/sys/run/cloud_controller_ng/cloud_controller_ng.pid",
+        "nats_uri": "nats://nats:4VtHVxJb8Y@10.10.16.11:4222",
+        "external_domain": [
+            "ccng.tabasco.cf-app.com",
+            "api.tabasco.cf-app.com"
+        ],
+        "system_domain_organization": "pivotal",
+        "system_domain": "tabasco.cf-app.com",
+        "app_domains": [
+            "tabasco-app.cf-app.com"
+        ],
+        "cc_partition": "default",
+        "bootstrap_admin_email": "sre@vmware.com",
+        "bulk_api": {
+            "auth_user": "bulk_api",
+            "auth_password": "zbTuuLaap44jadlas2l312lk"
+        },
+        "service_lifecycle": {
+            "max_upload_size": 1,
+            "upload_token": "fakestuff",
+            "upload_timeout": 10,
+            "serialization_data_server": [
+                "http://169.254.1.1:8080"
+            ]
+        },
+        "nginx": {
+            "use_nginx": true,
+            "instance_socket": "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"
+        },
+        "info": {
+            "name": "vcap",
+            "build": "2222",
+            "version": 2,
+            "support_address": "http://support.cloudfoundry.com",
+            "description": "Cloud Foundry sponsored by Pivotal",
+            "api_version": "2.0.0"
+        },
+        "directories": {
+            "droplets": "/var/vcap/shared/droplets",
+            "staging_manifests": "/var/vcap/jobs/cloud_controller_ng/config/staging",
+            "tmpdir": "/var/vcap/data/cloud_controller_ng/tmp"
+        },
+        "logging": {
+            "file": "/var/vcap/sys/log/cloud_controller_ng/cloud_controller_ng.log",
+            "syslog": "vcap.cloud_controller_ng",
+            "level": "debug",
+            "max_retries": 1
+        },
+        "db": {
+            "database": "mysql2://u84bc8d00ed220f:p14d1d13ab3030cbd456bbb556b9ed9d1@ccdb.cwioxiwh43gn.us-east-1.rds.amazonaws.com:3306/ccdb",
+            "max_connections": 32,
+            "pool_timeout": 10,
+            "log_level": "debug2"
+        },
+        "login": {
+            "url": "https://login.tabasco.cf-app.com"
+        },
+        "uaa": {
+            "url": "https://uaa.tabasco.cf-app.com",
+            "resource_id": "cloud_controller",
+            "verification_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC/85WUjM7WKxnSMkd/TtGo+WWX\nkI5pH8ACBtb5oameiMJIw/wZ+dtyIwU+NZ0mKua+IzpGL1++bLJL0fDxE1LpD88j\nWzjaaTp8930UyY23oMxSa6JMG6OpDW469VTkY1g3uE/RAFtg7J9ZnDrTrMFJrduV\nVRs5sM3o4r1UYUTD6wIDAQAB\n-----END PUBLIC KEY-----\n"
+        },
+        "staging": {
+            "max_staging_runtime": 900,
+            "auth": {
+                "user": "zxsfhgjg"
+            }
+        },
+        "runtimes_file": "/var/vcap/jobs/cloud_controller_ng/config/runtimes.yml",
+        "stacks_file": "/var/vcap/jobs/cloud_controller_ng/config/stacks.yml",
+        "quota_definitions": {
+            "free": {
+                "non_basic_services_allowed": false,
+                "total_services": 0,
+                "memory_limit": 0
+            },
+            "paid": {
+                "non_basic_services_allowed": true,
+                "total_services": -1,
+                "memory_limit": 10240
+            },
+            "runaway": {
+                "non_basic_services_allowed": true,
+                "total_services": -1,
+                "memory_limit": 102400
+            },
+            "trial": {
+                "non_basic_services_allowed": false,
+                "total_services": 10,
+                "memory_limit": 512,
+                "trial_db_allowed": true
+            }
+        },
+        "default_quota_definition": "free",
+        "resource_pool": {
+            "minimum_size": 65536,
+            "maximum_size": 536870912,
+            "resource_directory_key": "tabasco-cf-app-com-cc-resources",
+            "fog_connection": {
+                "provider": "AWS",
+                "aws_access_key_id": "AKIAIBJFPKON2WXOK5JQ",
+                "aws_secret_access_key": "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"
+            }
+        },
+        "packages": {
+            "app_package_directory_key": "tabasco-cf-app-com-cc-packages",
+            "fog_connection": {
+                "provider": "AWS",
+                "aws_access_key_id": "AKIAIBJFPKON2WXOK5JQ",
+                "aws_secret_access_key": "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"
+            }
+        },
+        "droplets": {
+            "droplet_directory_key": "tabasco-cf-app-com-cc-droplets",
+            "fog_connection": {
+                "provider": "AWS",
+                "aws_access_key_id": "AKIAIBJFPKON2WXOK5JQ",
+                "aws_secret_access_key": "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"
+            }
+        },
+        "db_encryption_key": "4493e8ec89f6",
+        "trial_db": {
+            "guid": "78ad16cf-3c22-4427-a982-b9d35d746914"
+        },
+        "bind_address": "10.10.16.13"
+    },
+    "nats_downtime": null,
+    "uptime": "2d:2h:2m:2s",
+    "mem": 112104,
+    "cpu": 2.3
+}
