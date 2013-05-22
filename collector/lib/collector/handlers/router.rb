@@ -5,6 +5,10 @@ module Collector
     class Router < Handler
       register ROUTER_COMPONENT
 
+      def is_healthy?(ok)
+        ok.gsub(/\s/, '') == '{"health":"ok"}'
+      end
+
       def process(varz)
         if varz["tags"]
           varz["tags"].each do |key, values|

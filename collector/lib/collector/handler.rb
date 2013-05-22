@@ -71,6 +71,16 @@ module Collector
     def process(varz)
     end
 
+    # Default implementation of is_healthy which is used
+    # to check to see if /healthz returns the right value
+    # This is necessary because, you know, somethings need
+    # to return json and others 'ok'. I'm looking at you gorouter.
+    # Override this method in handlers that need something
+    # more specific
+    def is_healthy?(ok)
+      ok.strip.downcase == "ok"
+    end
+
     # Sends the metric to the metric collector (historian)
     #
     # @param [String] name the metric name

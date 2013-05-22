@@ -218,7 +218,7 @@ module Collector
             begin
               now = Time.now.to_i
               handler = Handler.handler(@historian, job, index, now)
-              is_healthy = http.response.strip.downcase == "ok" ? 1 : 0
+              is_healthy = handler.is_healthy?(http.response) ? 1 : 0
               handler.send_metric("healthy", is_healthy, get_job_tags(job))
             rescue => e
               handler.send_metric("healthy", 0, get_job_tags(job))

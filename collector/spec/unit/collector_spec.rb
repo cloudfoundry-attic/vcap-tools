@@ -187,6 +187,7 @@ describe Collector::Collector do
            "mark healthy instances" do
       setup_healthz_request do |http_request, handler|
         http_request.should_receive(:response).and_return("ok")
+        handler.should_receive(:is_healthy?).with("ok").and_return(true)
         handler.should_receive(:send_metric).with("healthy", 1, {})
       end
     end
@@ -195,6 +196,7 @@ describe Collector::Collector do
            "mark unhealthy instances" do
       setup_healthz_request do |http_request, handler|
         http_request.should_receive(:response).and_return("not ok")
+        handler.should_receive(:is_healthy?).with("not ok").and_return(false)
         handler.should_receive(:send_metric).with("healthy", 0, {})
       end
     end

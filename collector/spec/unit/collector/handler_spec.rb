@@ -9,7 +9,6 @@ describe Collector::Handler do
       Collector::Handler.handler_map.should include("Test" => test_handler)
     end
 
-
     it "should fail to register multiple handlers for a single job" do
       Class.new(Collector::Handler) { register "Test" }
 
@@ -30,6 +29,16 @@ describe Collector::Handler do
 
     it "should return the default handler when none registered" do
       Collector::Handler.handler(nil, "Test", nil, nil).should be_kind_of(Collector::Handler)
+    end
+  end
+
+  describe "#is_healthy?" do
+    it "is true for 'ok'" do
+      expect(Collector::Handler.new(nil, nil, nil, nil).is_healthy?("ok")).to eq(true)
+    end
+
+    it "is false for non-ok" do
+      expect(Collector::Handler.new(nil, nil, nil, nil).is_healthy?("the collector is my favorite")).to eq(false)
     end
   end
 
