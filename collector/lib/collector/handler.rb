@@ -65,10 +65,24 @@ module Collector
       @logger = Config.logger
     end
 
-    # Processes varz in the context of the collection
+    # Processes varz in the context of the collection. Subclasses
+    # should override this.
     #
     # @param [Hash] varz the varzs collected for this job
     def process(varz)
+    end
+
+    # Called by the collector to process the varz. Processes common
+    # metric data and then calls process() to add subclass behavior.
+    def do_process(varz, job_tags)
+      # TODO: "mem" probably isn't used and should be removed
+      send_metric("mem", varz["mem"] / 1024, job_tags) if varz["mem"]
+      
+      send_metric("mem_free_bytes", varz["mem_free_bytes"], job_tags) if varz["mem_free_bytes"]
+      send_metric("mem_used_bytes", varz["mem_used_bytes"], job_tags) if varz["mem_used_bytes"]
+      send_metric("cpu_load_avg", varz["cpu_load_avg"], job_tags) if varz["cpu_load_avg"]
+
+      process(varz)
     end
 
     # Default implementation of is_healthy which is used

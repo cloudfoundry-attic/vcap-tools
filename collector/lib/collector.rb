@@ -188,11 +188,7 @@ module Collector
               now = Time.now.to_i
 
               handler = Handler.handler(@historian, job, index, now)
-              if varz["mem"]
-                handler.send_metric("mem", varz["mem"] / 1024,
-                                    get_job_tags(job))
-              end
-              handler.process(varz)
+              handler.do_process(varz, get_job_tags(job))
             rescue => e
               @logger.warn("Error processing varz: #{e.message}; fetched from #{host}")
               @logger.warn(e)

@@ -42,6 +42,43 @@ describe Collector::Handler do
     end
   end
 
+  describe "#do_process" do
+    let(:handler) { Collector::Handler.new(nil, nil, nil, nil) }
+
+    it "calls #process defined by the subclass" do
+      varz = {one: 1}
+      handler.should_receive(:process).with(varz)
+
+      handler.do_process(varz, {})
+    end
+
+    it "sends out 'mem' if specified" do
+      varz = {"mem" => 2048}
+      handler.should_receive(:send_metric).with("mem", 2, {})
+
+      handler.do_process(varz, {})
+    end
+
+    it "sends out 'mem_used_bytes' if specified" do
+      varz = {"mem_used_bytes" => 2048}
+      handler.should_receive(:send_metric).with("mem_used_bytes", 2048, {})
+
+      handler.do_process(varz, {})
+    end
+    it "sends out 'mem_free_bytes' if specified" do
+      varz = {"mem_free_bytes" => 2048}
+      handler.should_receive(:send_metric).with("mem_free_bytes", 2048, {})
+
+      handler.do_process(varz, {})
+    end
+    it "sends out 'cpu_load_avg' if specified" do
+      varz = {"cpu_load_avg" => 2.0}
+      handler.should_receive(:send_metric).with("cpu_load_avg", 2.0, {})
+
+      handler.do_process(varz, {})
+    end
+  end
+
   describe "send_metric" do
     it "should send the metric to the Historian" do
       historian = mock('Historian')

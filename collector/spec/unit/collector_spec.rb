@@ -115,27 +115,13 @@ describe Collector::Collector do
       end
     end
 
-
-    it "should fetch the varz from the component and use a " +
-           "handler to process the results" do
-      test_varz do |http_request, handler|
-        http_request.should_receive(:response).and_return(Yajl::Encoder.encode({
-          "mem" => 1234,
-          "test" => "foo"
-        }))
-
-        handler.should_receive(:send_metric).with("mem", 1, {})
-        handler.should_receive(:process).with({"mem" => 1234, "test" => "foo"})
-      end
-    end
-
-    it "should skip memory metric if not there" do
+    it "processes the HTTP response" do
       test_varz do |http_request, handler|
         http_request.should_receive(:response).and_return(Yajl::Encoder.encode({
           "test" => "foo"
         }))
 
-        handler.should_receive(:process).with({"test" => "foo"})
+        handler.should_receive(:do_process).with({"test" => "foo"}, {})
       end
     end
   end
