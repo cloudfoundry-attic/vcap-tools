@@ -3,10 +3,10 @@
 module Collector
   class Handler
     class VblobNode < ServiceHandler
-      register VBLOB_NODE
+      register Components::VBLOB_NODE
 
-      def process(varz)
-        process_healthy_instances_metric(varz)
+      def process
+        process_healthy_instances_metric
       end
 
       def service_type

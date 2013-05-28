@@ -3,9 +3,9 @@
 module Collector
   class Handler
     class SerializationDataServer < ServiceHandler
-      register SERIALIZATION_DATA_SERVER
+      register Components::SERIALIZATION_DATA_SERVER
 
-      def process(varz)
+      def process
         if varz["nfs_free_space"]
           send_metric("services.nfs_free_space", varz["nfs_free_space"])
         end

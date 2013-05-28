@@ -10,7 +10,7 @@ describe Collector::Handler::CloudController do
       end
     end
   end
-  let(:handler) { Collector::Handler::CloudController.new(historian, "CloudController", 0, now) }
+  let(:handler) { Collector::Handler::CloudController.new(historian, "CloudController", 0, now, fixture(:cloud_controller)) }
 
   it "should register itself as a handler" do
     Collector::Handler.handler_map.clear
@@ -22,9 +22,8 @@ describe Collector::Handler::CloudController do
   end
 
   describe "process" do
-    let(:varz) { fixture(:cloud_controller) }
     subject do
-      handler.process(varz)
+      handler.process
       data
     end
 
@@ -33,6 +32,7 @@ describe Collector::Handler::CloudController do
       timestamp: now,
       value: 22,
       tags: {
+        role: "core",
         job: "CloudController",
         index: 0
       }
@@ -43,6 +43,7 @@ describe Collector::Handler::CloudController do
       timestamp: now,
       value: 9828,
       tags: {
+        role: "core",
         job: "CloudController",
         index: 0
       }
@@ -53,6 +54,7 @@ describe Collector::Handler::CloudController do
       timestamp: now,
       value: 17,
       tags: {
+        role: "core",
         job: "CloudController",
         index: 0
       }
@@ -63,6 +65,7 @@ describe Collector::Handler::CloudController do
       timestamp: now,
       value: 32,
       tags: {
+        role: "core",
         job: "CloudController",
         index: 0
       }
@@ -73,6 +76,7 @@ describe Collector::Handler::CloudController do
       timestamp: now,
       value: 5,
       tags: {
+        role: "core",
         job: "CloudController",
         index: 0
       }
@@ -83,6 +87,7 @@ describe Collector::Handler::CloudController do
       timestamp: now,
       value: 12,
       tags: {
+        role: "core",
         job: "CloudController",
         index: 0
       }
@@ -93,6 +98,7 @@ describe Collector::Handler::CloudController do
       timestamp: now,
       value: 3,
       tags: {
+        role: "core",
         job: "CloudController",
         index: 0
       }
@@ -103,6 +109,7 @@ describe Collector::Handler::CloudController do
       timestamp: now,
       value: 9105 + 203,
       tags: {
+        role: "core",
         job: "CloudController",
         index: 0
       }
@@ -114,6 +121,7 @@ describe Collector::Handler::CloudController do
       timestamp: now,
       value: 12 + 21,
       tags: {
+        role: "core",
         job: "CloudController",
         index: 0
       }
@@ -124,6 +132,7 @@ describe Collector::Handler::CloudController do
       timestamp: now,
       value: 622 + 99 + 2,
       tags: {
+        role: "core",
         job: "CloudController",
         index: 0
       }
@@ -134,6 +143,7 @@ describe Collector::Handler::CloudController do
       timestamp: now,
       value: 22,
       tags: {
+        role: "core",
         job: "CloudController",
         index: 0
       }
@@ -144,6 +154,7 @@ describe Collector::Handler::CloudController do
       timestamp: now,
       value: 2 + (60 * 2) + (60 * 60 * 2) + (60 * 60 * 24 * 2),
       tags: {
+        role: "core",
         job: "CloudController",
         index: 0
       }

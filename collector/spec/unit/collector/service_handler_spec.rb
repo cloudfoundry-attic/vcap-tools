@@ -14,8 +14,8 @@ describe Collector::ServiceHandler do
           )
         )
       )
-      handler = Collector::ServiceHandler.new(historian, "Test", 1, 10000)
-      handler.send_metric("some_key", 2, {:tag => "value"})
+      handler = Collector::ServiceHandler.new(historian, "Test", 1, 10000, {})
+      handler.send_metric("some_key", 2)
     end
   end
 
@@ -35,7 +35,6 @@ describe Collector::ServiceHandler do
         }
       })
 
-      handler = Collector::ServiceHandler.new(historian, "Test", 1, 10000)
       varz = {
         "instances" => {
           1 => 'ok',
@@ -44,7 +43,8 @@ describe Collector::ServiceHandler do
           4 => 'ok'
         }
       }
-      handler.process_healthy_instances_metric(varz)
+      handler = Collector::ServiceHandler.new(historian, "Test", 1, 10000, varz)
+      handler.process_healthy_instances_metric
     end
   end
 
@@ -76,8 +76,8 @@ describe Collector::ServiceHandler do
 
     def self.test_report_metric(metric_name, key, value)
       it "should report #{key} to TSDB server" do
-        handler = Collector::ServiceHandler.new(historian, "Test", 1, 10000)
-        handler.process_plan_score_metric(varz)
+        handler = Collector::ServiceHandler.new(historian, "Test", 1, 10000, varz)
+        handler.process_plan_score_metric
         history_data.fetch(metric_name).should have(1).item
         history_data.fetch(metric_name).fetch(0).should include(
           key: metric_name,
@@ -111,7 +111,6 @@ describe Collector::ServiceHandler do
           service_type: 'unknown'
         }
       })
-      handler = Collector::ServiceHandler.new(historian, "Test", 1, 10000)
       varz = {
         "nodes" => {
           "node_0" => {
@@ -124,7 +123,8 @@ describe Collector::ServiceHandler do
           }
         }
       }
-      handler.process_online_nodes(varz)
+      handler = Collector::ServiceHandler.new(historian, "Test", 1, 10000, varz)
+      handler.process_online_nodes
     end
   end
 

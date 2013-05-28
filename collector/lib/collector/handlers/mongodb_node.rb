@@ -3,10 +3,10 @@
 module Collector
   class Handler
     class MongodbNode < ServiceHandler
-      register MONGODB_NODE
+      register Components::MONGODB_NODE
 
-      def process(varz)
-        process_healthy_instances_metric(varz)
+      def process
+        process_healthy_instances_metric
       end
 
       def service_type

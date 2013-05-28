@@ -18,63 +18,19 @@ require "collector/handler"
 require "collector/service_handler"
 require "collector/tsdb_connection"
 require "collector/historian"
+require "collector/components"
 
 module Collector
-  CLOUD_CONTROLLER_COMPONENT = "CloudController"
-  DEA_COMPONENT = "DEA"
-  HEALTH_MANAGER_COMPONENT = "HealthManager"
-  ROUTER_COMPONENT = "Router"
-
-  # services components
-  MYSQL_PROVISIONER = "MyaaS-Provisioner"
-  MYSQL_NODE = "MyaaS-Node"
-
-  PGSQL_PROVISIONER = "AuaaS-Provisioner"
-  PGSQL_NODE = "AuaaS-Node"
-
-  MONGODB_PROVISIONER = "MongoaaS-Provisioner"
-  MONGODB_NODE = "MongoaaS-Node"
-
-  NEO4J_PROVISIONER = "Neo4jaaS-Provisioner"
-  NEO4J_NODE = "Neo4jaaS-Node"
-
-  RABBITMQ_PROVISIONER = "RMQaaS-Provisioner"
-  RABBITMQ_NODE = "RMQaaS-Node"
-
-  REDIS_PROVISIONER = "RaaS-Provisioner"
-  REDIS_NODE = "RaaS-Node"
-
-  VBLOB_PROVISIONER = "VBlobaaS-Provisioner"
-  VBLOB_NODE = "VBlobaaS-Node"
-
-  SERIALIZATION_DATA_SERVER = "SerializationDataServer"
-
-  BACKUP_MANAGER = "BackupManager"
-
   # Varz collector
   class Collector
     ANNOUNCE_SUBJECT = "vcap.component.announce".freeze
     DISCOVER_SUBJECT = "vcap.component.discover".freeze
     COLLECTOR_PING = "collector.nats.ping".freeze
 
-    # Creates a new varz collector based on the {Config} settings.
-
-
     def initialize
       @logger = Config.logger
 
       @components = {}
-      @core_components = Set.new([CLOUD_CONTROLLER_COMPONENT, DEA_COMPONENT,
-                                  HEALTH_MANAGER_COMPONENT, ROUTER_COMPONENT])
-      @service_components = Set.new([MYSQL_PROVISIONER, MYSQL_NODE,
-                                     PGSQL_PROVISIONER, PGSQL_NODE,
-                                     MONGODB_PROVISIONER, MONGODB_NODE,
-                                     NEO4J_PROVISIONER, NEO4J_NODE,
-                                     RABBITMQ_PROVISIONER, RABBITMQ_NODE,
-                                     REDIS_PROVISIONER, REDIS_NODE,
-                                     VBLOB_PROVISIONER, VBLOB_NODE])
-      @service_auxiliary_components = Set.new([SERIALIZATION_DATA_SERVER,
-                                               BACKUP_MANAGER])
 
       @historian = ::Collector::Historian.build
       @nats_latency = VCAP::RollingMetric.new(60)
@@ -164,8 +120,7 @@ module Collector
 
     # Generates metrics that don't require any interactions with varz or healthz
     def send_local_metrics
-      handler = Handler.handler(@historian, "collector", Config.index,
-                                Time.now.to_i)
+      handler = Handler.handler(@historian, "collector", Config.index, Time.now.to_i)
       handler.send_latency_metric("nats.latency.1m", @nats_latency.value)
     end
 
@@ -177,8 +132,7 @@ module Collector
           next unless credentials_ok?(job, instance)
           host = instance[:host]
           varz_uri = "http://#{host}/varz"
-          http = EventMachine::HttpRequest.new(varz_uri).get(
-                  :head => authorization_headers(instance))
+          http = EventMachine::HttpRequest.new(varz_uri).get(:head => authorization_headers(instance))
           http.errback do
             @logger.warn("Failed fetching varz from: #{host}")
           end
@@ -187,8 +141,8 @@ module Collector
               varz = Yajl::Parser.parse(http.response)
               now = Time.now.to_i
 
-              handler = Handler.handler(@historian, job, index, now)
-              handler.do_process(varz, get_job_tags(job))
+              handler = Handler.handler(@historian, job, index, now, varz)
+              handler.do_process()
             rescue => e
               @logger.warn("Error processing varz: #{e.message}; fetched from #{host}")
               @logger.warn(e)
@@ -205,42 +159,21 @@ module Collector
         instances.each do |index, instance|
           next unless credentials_ok?(job, instance)
           healthz_uri = "http://#{instance[:host]}/healthz"
-          http = EventMachine::HttpRequest.new(healthz_uri).get(
-                  :head => authorization_headers(instance))
+          http = EventMachine::HttpRequest.new(healthz_uri).get(:head => authorization_headers(instance))
           http.errback do
             @logger.warn("Failed fetching healthz from: #{instance[:host]}")
           end
           http.callback do
             begin
-              now = Time.now.to_i
-              handler = Handler.handler(@historian, job, index, now)
-              is_healthy = handler.is_healthy?(http.response) ? 1 : 0
-              handler.send_metric("healthy", is_healthy, get_job_tags(job))
+              is_healthy = http.response.strip.downcase == "ok" ? 1 : 0
+              send_healthz_metric(is_healthy, job, index)
             rescue => e
-              handler.send_metric("healthy", 0, get_job_tags(job))
-              @logger.warn("Error processing healthz: #{e.message}")
-              @logger.warn(e)
+              @logger.error("Error processing healthz: #{e.message}")
+              @logger.error(e)
             end
           end
         end
       end
-    end
-
-    # Generates the common tags used for generating common
-    # (memory, health, etc.) metrics.
-    #
-    # @param [String] type the job type
-    # @return [Hash<Symbol, String>] tags for this job type
-    def get_job_tags(type)
-      tags = {}
-      if @core_components.include?(type)
-        tags[:role] = "core"
-      elsif @service_components.include?(type)
-        tags[:role] = "service"
-      elsif @service_auxiliary_components.include?(type)
-        tags[:role] = "service"
-      end
-      tags
     end
 
     def credentials_ok?(job, instance)
@@ -261,6 +194,17 @@ module Collector
       {
         "Authorization" => "Basic #{credentials}"
       }
+    end
+
+    private
+
+    def send_healthz_metric(is_healthy, job, index)
+      @historian.send_data({
+        key: "healthy",
+        timestamp: Time.now.to_i,
+        value: is_healthy,
+        tags: Components.get_job_tags(job).merge({job: job, index: index})
+      })
     end
 
   end

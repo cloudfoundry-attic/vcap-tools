@@ -75,7 +75,7 @@ describe Collector::Collector do
   end
 
   describe :fetch_varz do
-    def test_varz
+    it "processes the HTTP response" do
       create_fake_collector do |collector, _|
         collector.process_component_discovery(Yajl::Encoder.encode({
           "type" => "Test",
@@ -94,34 +94,28 @@ describe Collector::Collector do
 
         http_client = mock(:HttpClient)
         http_client.should_receive(:get).
-            with({:head=>{"Authorization" => "Basic dXNlcjpwYXNz"}}).
-            and_return(http_request)
+          with({:head=>{"Authorization" => "Basic dXNlcjpwYXNz"}}).
+          and_return(http_request)
 
         EventMachine::HttpRequest.should_receive(:new).
-            with("http://test-host:1234/varz").
-            and_return(http_client)
+          with("http://test-host:1234/varz").
+          and_return(http_client)
 
         collector.fetch_varz
 
         callback.should_not be_nil
         handler = mock(:Handler)
 
-        yield(http_request, handler)
-
-        Collector::Handler.should_receive(:handler).
-            with(kind_of(Collector::Historian), "Test", 1, kind_of(Fixnum)).
-            and_return(handler)
-        callback.call
-      end
-    end
-
-    it "processes the HTTP response" do
-      test_varz do |http_request, handler|
         http_request.should_receive(:response).and_return(Yajl::Encoder.encode({
           "test" => "foo"
         }))
 
-        handler.should_receive(:do_process).with({"test" => "foo"}, {})
+        handler.should_receive(:do_process)
+
+        Collector::Handler.should_receive(:handler).
+          with(kind_of(Collector::Historian), "Test", 1, kind_of(Fixnum), { "test" => "foo" }).
+          and_return(handler)
+        callback.call
       end
     end
   end
@@ -154,36 +148,33 @@ describe Collector::Collector do
             with("http://test-host:1234/healthz").
             and_return(http_client)
 
+        yield http_request, collector
+
         collector.fetch_healthz
 
-        callback.should_not be_nil
-
-        handler = mock(:Handler)
-
-        yield http_request, handler
-
-        Collector::Handler.should_receive(:handler).
-            with(kind_of(Collector::Historian), "Test", 1, kind_of(Fixnum)).
-            and_return(handler)
         callback.call
       end
     end
 
-    it "should fetch the healthz from the component and " +
-           "mark healthy instances" do
-      setup_healthz_request do |http_request, handler|
+    it "should fetch the healthz from the component and report healthy" do
+      setup_healthz_request do |http_request, collector|
         http_request.should_receive(:response).and_return("ok")
-        handler.should_receive(:is_healthy?).with("ok").and_return(true)
-        handler.should_receive(:send_metric).with("healthy", 1, {})
+
+        collector.instance_variable_get(:@historian).should_receive(:send_data).with(hash_including({
+          :key => "healthy",
+          :value => 1
+        }))
       end
     end
 
-    it "should fetch the healthz from the component and " +
-           "mark unhealthy instances" do
-      setup_healthz_request do |http_request, handler|
+    it "should fetch the healthz from the component and report unhealthy" do
+      setup_healthz_request do |http_request, collector|
         http_request.should_receive(:response).and_return("not ok")
-        handler.should_receive(:is_healthy?).with("not ok").and_return(false)
-        handler.should_receive(:send_metric).with("healthy", 0, {})
+
+        collector.instance_variable_get(:@historian).should_receive(:send_data).with(hash_including({
+          :key => "healthy",
+          :value => 0
+        }))
       end
     end
 
@@ -214,37 +205,6 @@ describe Collector::Collector do
         latency = {:value => 6000, :samples => 3}
         handler.should_receive(:send_latency_metric).
             with("nats.latency.1m", latency)
-      end
-    end
-  end
-
-  describe :get_job_args do
-    it "should mark the core components" do
-      create_fake_collector do |collector, _, _|
-        ["CloudController", "DEA", "HealthManager", "Router"].each do |job|
-          collector.get_job_tags(job).should == {:role=>"core"}
-        end
-      end
-    end
-
-    it "should mark the service node components" do
-      create_fake_collector do |collector, _, _|
-        ["MongoaaS-Node", "RMQaaS-Node"].each do |job|
-          collector.get_job_tags(job).should ==
-              {:role => "service"}
-        end
-      end
-    end
-
-    it "should mark the service provisioner components" do
-      create_fake_collector do |collector, _, _|
-        [
-          "MongoaaS-Provisioner",
-          "RMQaaS-Provisioner"
-        ].each do |job|
-          collector.get_job_tags(job).should ==
-              {:role => "service"}
-        end
       end
     end
   end

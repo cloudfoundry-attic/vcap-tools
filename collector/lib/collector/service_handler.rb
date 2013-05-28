@@ -3,21 +3,14 @@ require_relative "handler"
 
 module Collector
   class ServiceHandler < Handler
-    def initialize(historian, job, index, now)
-      super(historian, job, index, now)
-    end
-
-    def send_metric(name, value, tags = {})
-      default_tags = {:service_type => service_type,
-                      :component => component}
-      tags = tags.merge(default_tags)
-      super(name, value, tags)
+    def additional_tags
+      {:service_type => service_type, :component => component}
     end
 
     # Process healthy instances percent for each service, default is 0 if
     # no instance provisioned.
     #
-    def process_healthy_instances_metric(varz)
+    def process_healthy_instances_metric
       healthy_instances = 0
       if varz["instances"]
         total_instances = varz["instances"].length
@@ -33,7 +26,7 @@ module Collector
     # Sum up all nodes' available_capacity value for each service, report
     # low_water & high_water value at the same time.
     #
-    def process_plan_score_metric(varz)
+    def process_plan_score_metric
       return unless varz.include?("plans")
       if varz["plans"]
         varz["plans"].each do |plan|
@@ -52,7 +45,7 @@ module Collector
     # Get online nodes varz for each service gateway, report the total
     # number of online nodes
     #
-    def process_online_nodes(varz)
+    def process_online_nodes
       return unless varz.include?("nodes")
       send_metric("services.online_nodes", varz["nodes"].length)
     end

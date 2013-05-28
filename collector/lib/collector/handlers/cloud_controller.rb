@@ -3,11 +3,11 @@ require 'matrix'
 module Collector
   class Handler
     class CloudController < Handler
-      register CLOUD_CONTROLLER_COMPONENT
+      register Components::CLOUD_CONTROLLER_COMPONENT
 
       DHMS_IN_SECS = [24 * 60 * 60, 60 * 60, 60, 1].freeze
 
-      def process(varz)
+      def process
         varz["vcap_sinatra"]["requests"].each do |key, value|
           send_metric("cc.requests.#{key}", value)
         end

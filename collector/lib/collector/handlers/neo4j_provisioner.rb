@@ -3,11 +3,11 @@
 module Collector
   class Handler
     class Neo4jProvisioner < ServiceHandler
-      register NEO4J_PROVISIONER
+      register Components::NEO4J_PROVISIONER
 
-      def process(varz)
-        process_plan_score_metric(varz)
-        process_online_nodes(varz)
+      def process
+        process_plan_score_metric
+        process_online_nodes
       end
 
       def service_type

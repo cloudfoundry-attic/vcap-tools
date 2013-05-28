@@ -3,10 +3,10 @@
 module Collector
   class Handler
     class Neo4jNode < ServiceHandler
-      register NEO4J_NODE
+      register Components::NEO4J_NODE
 
-      def process(varz)
-        process_healthy_instances_metric(varz)
+      def process
+        process_healthy_instances_metric
       end
 
       def service_type

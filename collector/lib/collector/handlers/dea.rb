@@ -3,12 +3,12 @@
 module Collector
   class Handler
     class Dea < Handler
-      register DEA_COMPONENT
+      register Components::DEA_COMPONENT
 
       BYTE_METRICS = %w[used_memory reserved_memory used_disk].freeze
       B_IN_MB = 1024.freeze
 
-      def process(varz)
+      def process
         if varz["frameworks"]
           varz["frameworks"].each do |framework, metrics|
             BYTE_METRICS.each do |metric_name|

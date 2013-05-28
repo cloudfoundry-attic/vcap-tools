@@ -2,7 +2,7 @@
 module Collector
   class Handler
     class HealthManager < Handler
-      register HEALTH_MANAGER_COMPONENT
+      register Components::HEALTH_MANAGER_COMPONENT
       METRICS = {
               "total" => {
                       "apps" => "apps",
@@ -21,7 +21,7 @@ module Collector
               }
       }
 
-      def process(varz)
+      def process
         METRICS.each do |type, metric_map|
           if type_varz = varz[type]
             metric_map.each do |varz_name, metric_name|

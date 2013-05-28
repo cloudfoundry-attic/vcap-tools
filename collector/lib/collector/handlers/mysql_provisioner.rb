@@ -3,11 +3,11 @@
 module Collector
   class Handler
     class MysqlProvisioner < ServiceHandler
-      register MYSQL_PROVISIONER
+      register Components::MYSQL_PROVISIONER
 
-      def process(varz)
-        process_plan_score_metric(varz)
-        process_online_nodes(varz)
+      def process
+        process_plan_score_metric
+        process_online_nodes
       end
 
       def service_type

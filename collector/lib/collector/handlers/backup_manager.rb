@@ -3,9 +3,9 @@
 module Collector
   class Handler
     class BackupManager < ServiceHandler
-      register BACKUP_MANAGER
+      register Components::BACKUP_MANAGER
 
-      def process(varz)
+      def process
         total_size = varz["disk_total_size"] || 0
         free_size = varz["disk_available_size"] || 0
         free_percent = 0

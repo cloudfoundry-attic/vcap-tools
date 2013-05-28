@@ -1,7 +1,7 @@
 require "spec_helper"
 
 describe Collector::Handler do
-  describe :register do
+  describe "register" do
     after { Collector::Handler.handler_map.clear }
 
     it "should register varz handler plugins" do
@@ -18,64 +18,76 @@ describe Collector::Handler do
     end
   end
 
-  describe :handler do
+  describe "handler" do
     after { Collector::Handler.handler_map.clear }
 
     it "should return the registered varz handler plugin" do
       test_handler = Class.new(Collector::Handler) { register "Test" }
-      Collector::Handler.handler(nil, "Test", nil, nil).
+      Collector::Handler.handler(nil, "Test", nil, nil, {}).
           should be_kind_of(test_handler)
     end
 
     it "should return the default handler when none registered" do
-      Collector::Handler.handler(nil, "Test", nil, nil).should be_kind_of(Collector::Handler)
-    end
-  end
-
-  describe "#is_healthy?" do
-    it "is true for 'ok'" do
-      expect(Collector::Handler.new(nil, nil, nil, nil).is_healthy?("ok")).to eq(true)
-    end
-
-    it "is false for non-ok" do
-      expect(Collector::Handler.new(nil, nil, nil, nil).is_healthy?("the collector is my favorite")).to eq(false)
+      Collector::Handler.handler(nil, "Test", nil, nil, {}).should be_kind_of(Collector::Handler)
     end
   end
 
   describe "#do_process" do
-    let(:handler) { Collector::Handler.new(nil, nil, nil, nil) }
-
     it "calls #process defined by the subclass" do
-      varz = {one: 1}
-      handler.should_receive(:process).with(varz)
-
-      handler.do_process(varz, {})
+      handler = Collector::Handler.new(nil, nil, nil, nil, {})
+      handler.should_receive(:process).with()
+      handler.do_process()
     end
 
     it "sends out 'mem' if specified" do
-      varz = {"mem" => 2048}
-      handler.should_receive(:send_metric).with("mem", 2, {})
-
-      handler.do_process(varz, {})
+      handler = Collector::Handler.new(nil, nil, nil, nil, {"mem" => 2048})
+      handler.should_receive(:send_metric).with("mem", 2)
+      handler.do_process
     end
 
     it "sends out 'mem_used_bytes' if specified" do
-      varz = {"mem_used_bytes" => 2048}
-      handler.should_receive(:send_metric).with("mem_used_bytes", 2048, {})
+      handler = Collector::Handler.new(nil, nil, nil, nil, {"mem_used_bytes" => 2048})
+      handler.should_receive(:send_metric).with("mem_used_bytes", 2048)
 
-      handler.do_process(varz, {})
+      handler.do_process
     end
     it "sends out 'mem_free_bytes' if specified" do
-      varz = {"mem_free_bytes" => 2048}
-      handler.should_receive(:send_metric).with("mem_free_bytes", 2048, {})
+      handler = Collector::Handler.new(nil, nil, nil, nil, {"mem_free_bytes" => 2048})
+      handler.should_receive(:send_metric).with("mem_free_bytes", 2048)
 
-      handler.do_process(varz, {})
+      handler.do_process
     end
     it "sends out 'cpu_load_avg' if specified" do
-      varz = {"cpu_load_avg" => 2.0}
-      handler.should_receive(:send_metric).with("cpu_load_avg", 2.0, {})
+      handler = Collector::Handler.new(nil, nil, nil, nil, {"cpu_load_avg" => 2.0})
+      handler.should_receive(:send_metric).with("cpu_load_avg", 2.0)
 
-      handler.do_process(varz, {})
+      handler.do_process
+    end
+  end
+
+  describe "sent tags" do
+    let(:historian) { double }
+    let(:handler) { Collector::Handler.new(historian, "DEA", 0, nil, {"cpu_load_avg" => "42"}) }
+
+    it "adds extra tags when specified" do
+      handler.stub(:additional_tags => {foo: "bar"})
+      historian.should_receive(:send_data).with(hash_including({
+        tags: hash_including({
+          foo: "bar"
+        })
+      }))
+      handler.do_process
+    end
+
+    it "sends the common tags" do
+      historian.should_receive(:send_data).with(hash_including({
+        tags: {
+          job: "DEA",
+          index: 0,
+          role: "core"
+        }
+      }))
+      handler.do_process
     end
   end
 
@@ -86,25 +98,25 @@ describe Collector::Handler do
           with({key: "some_key",
                 timestamp: 10000,
                 value: 2,
-                tags: {index: 1, job: "Test", tag: "value"}})
+                tags: {index: 1, job: "Test"}})
 
-      handler = Collector::Handler.handler(historian, "Test", 1, 10000)
-      handler.send_metric("some_key", 2, {:tag => "value"})
+      handler = Collector::Handler.handler(historian, "Test", 1, 10000, {})
+      handler.send_metric("some_key", 2)
     end
 
     context "TSDB" do
       before do
         connection = double('EventMachine')
         EventMachine.should_receive(:connect).and_return(connection)
-        connection.should_receive(:send_data).with("put some_key 10000 2 index=1 job=Test tag=value\n")
-        Collector::Config.logger.should_receive(:debug1).with("put some_key 10000 2 index=1 job=Test tag=value\n")
+        connection.should_receive(:send_data).with("put some_key 10000 2 index=1 job=Test\n")
+        Collector::Config.logger.should_receive(:debug1).with("put some_key 10000 2 index=1 job=Test\n")
       end
 
       it "integrates with TSDB historians" do
         historian = Collector::Historian::Tsdb.new("host", 1234)
-        handler = Collector::Handler.handler(historian, "Test", 1, 10000)
+        handler = Collector::Handler.handler(historian, "Test", 1, 10000, {})
 
-        handler.send_metric("some_key", 2, {:tag => "value"})
+        handler.send_metric("some_key", 2)
       end
     end
 
@@ -121,7 +133,6 @@ describe Collector::Handler do
                     value: "2",
                     timestamp: "2013-03-07T19:13:28Z",
                     dimensions: [
-                        {name: "tag", value: "value"},
                         {name: "job", value: "Test"},
                         {name: "index", value: "1"},
                         {name: "name", value: "Test/1"},
@@ -134,10 +145,10 @@ describe Collector::Handler do
 
       it "integrates with CloudWatch historians" do
         historian = Collector::Historian::CloudWatch.new("access", "secret")
-        handler = Collector::Handler.handler(historian, "Test", 1, 1362683608)
+        handler = Collector::Handler.handler(historian, "Test", 1, 1362683608, {})
         ::Collector::Config.stub(:deployment_name).and_return("dev113cw")
 
-        handler.send_metric("some_key", 2, {:tag => "value"})
+        handler.send_metric("some_key", 2)
       end
     end
   end
@@ -149,11 +160,9 @@ describe Collector::Handler do
           with({key: "latency_key",
                 timestamp: 10000,
                 value: 5,
-                tags: {index: 1, job: "Test", tag: "value"}})
-      handler = Collector::Handler.handler(connection, "Test", 1, 10000)
-      handler.send_latency_metric("latency_key",
-                                  {"value" => 10, "samples" => 2},
-                                  {:tag => "value"})
+                tags: {index: 1, job: "Test"}})
+      handler = Collector::Handler.handler(connection, "Test", 1, 10000, {})
+      handler.send_latency_metric("latency_key", {"value" => 10, "samples" => 2})
     end
   end
 end

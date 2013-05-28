@@ -3,10 +3,10 @@
 module Collector
   class Handler
     class PostgresqlNode < ServiceHandler
-      register PGSQL_NODE
+      register Components::PGSQL_NODE
 
-      def process(varz)
-        process_healthy_instances_metric(varz)
+      def process
+        process_healthy_instances_metric
       end
 
       def service_type

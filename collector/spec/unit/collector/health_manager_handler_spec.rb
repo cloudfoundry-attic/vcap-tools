@@ -6,7 +6,6 @@ describe "Collector::Handler::HealthManager" do
     #    Collector::Handler::HealthManager.should_receive(:register).and_return(nil)
 
     create_fake_collector do
-      handler =  Collector::Handler::HealthManager.new(nil, nil, nil, nil)
 
       varz = {
         "running" => {
@@ -27,6 +26,8 @@ describe "Collector::Handler::HealthManager" do
         }
       }
 
+      handler =  Collector::Handler::HealthManager.new(nil, nil, nil, nil, varz)
+
       handler.should_receive(:send_metric).with("running.crashes", 0)
       handler.should_receive(:send_metric).with("running.running_apps", 98)
       handler.should_receive(:send_metric).with("total.apps", 150)
@@ -34,7 +35,7 @@ describe "Collector::Handler::HealthManager" do
 
       handler.should_receive(:send_metric).exactly(12 - 4).times
 
-      handler.process(varz)
+      handler.process
       Collector::Handler.handler_map = {}
     end
   end
