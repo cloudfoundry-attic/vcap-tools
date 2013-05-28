@@ -2,21 +2,12 @@
 
 module Collector
   class Handler
-    class RabbitmqNode < ServiceHandler
+    class RabbitmqNode < ServiceNodeHandler
       register Components::RABBITMQ_NODE
-
-      def process
-        process_healthy_instances_metric
-      end
 
       def service_type
         "rabbitmq"
       end
-
-      def component
-        "node"
-      end
-
     end
   end
 end

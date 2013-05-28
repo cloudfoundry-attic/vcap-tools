@@ -2,19 +2,11 @@
 
 module Collector
   class Handler
-    class MongodbNode < ServiceHandler
+    class MongodbNode < ServiceNodeHandler
       register Components::MONGODB_NODE
-
-      def process
-        process_healthy_instances_metric
-      end
 
       def service_type
         "mongodb"
-      end
-
-      def component
-        "node"
       end
 
     end

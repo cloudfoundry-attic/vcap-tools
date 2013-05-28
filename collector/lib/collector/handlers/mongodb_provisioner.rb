@@ -2,20 +2,11 @@
 
 module Collector
   class Handler
-    class MongodbProvisioner < ServiceHandler
+    class MongodbProvisioner < ServiceGatewayHandler
       register Components::MONGODB_PROVISIONER
-
-      def process
-        process_plan_score_metric
-        process_online_nodes
-      end
 
       def service_type
         "mongodb"
-      end
-
-      def component
-        "gateway"
       end
 
     end

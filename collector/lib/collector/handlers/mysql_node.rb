@@ -2,21 +2,12 @@
 
 module Collector
   class Handler
-    class MysqlNode < ServiceHandler
+    class MysqlNode < ServiceNodeHandler
       register Components::MYSQL_NODE
-
-      def process
-        process_healthy_instances_metric
-      end
 
       def service_type
         "mysql"
       end
-
-      def component
-        "node"
-      end
-
     end
   end
 end

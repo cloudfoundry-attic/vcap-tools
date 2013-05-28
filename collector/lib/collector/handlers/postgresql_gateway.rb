@@ -2,20 +2,11 @@
 
 module Collector
   class Handler
-    class PostgresqlProvisioner < ServiceHandler
+    class PostgresqlProvisioner < ServiceGatewayHandler
       register Components::PGSQL_PROVISIONER
-
-      def process
-        process_plan_score_metric
-        process_online_nodes
-      end
 
       def service_type
         "postgresql"
-      end
-
-      def component
-        "gateway"
       end
 
     end

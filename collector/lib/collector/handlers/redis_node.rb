@@ -2,21 +2,12 @@
 
 module Collector
   class Handler
-    class RedisNode < ServiceHandler
+    class RedisNode < ServiceNodeHandler
       register Components::REDIS_NODE
-
-      def process
-        process_healthy_instances_metric
-      end
 
       def service_type
         "redis"
       end
-
-      def component
-        "node"
-      end
-
     end
   end
 end

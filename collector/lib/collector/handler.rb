@@ -44,13 +44,13 @@ module Collector
     end
 
     # @return [String] job name
-    attr_accessor :job
+    attr_reader :job
 
     # @return [Fixnum] job index
-    attr_accessor :index
+    attr_reader :index
 
     # @return [Fixnum] timestamp when metrics were collected
-    attr_accessor :now
+    attr_reader :now
 
     attr_reader :varz
 
