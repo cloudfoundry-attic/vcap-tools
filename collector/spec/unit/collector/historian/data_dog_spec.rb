@@ -26,8 +26,8 @@ describe Collector::Historian::DataDog do
         component:unknown
         service_type:unknown
         tag:value
-        name:Test/1
-        deployment:dev114cw
+        foo:bar
+        foo:baz
       ]
       dog_client.should_receive(:emit_points)
         .with("cf.collector.some_metric.some_key", [[Time.at(time), 2]], tags: tags)
@@ -41,7 +41,8 @@ describe Collector::Historian::DataDog do
           index: 1,
           component: "unknown",
           service_type: "unknown",
-          tag: "value"
+          tag: "value",
+          foo: %w(bar baz)
         }
       })
     end

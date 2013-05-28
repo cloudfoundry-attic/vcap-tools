@@ -19,7 +19,7 @@ describe Collector::Historian::Tsdb do
     it "converts the properties hash into a tsdb 'put' command" do
       tsdb_historian = described_class.new("host", 9999)
 
-      connection.should_receive(:send_data).with("put some_key 10000 2 component=unknown index=1 job=Test service_type=unknown tag=value\n")
+      connection.should_receive(:send_data).with("put some_key 10000 2 component=unknown foo=bar foo=baz index=1 job=Test service_type=unknown tag=value\n")
       tsdb_historian.send_data({
               key: "some_key",
               timestamp: 10_000,
@@ -29,7 +29,8 @@ describe Collector::Historian::Tsdb do
                   component: "unknown",
                   service_type: "unknown",
                   job: "Test",
-                  tag: "value"
+                  tag: "value",
+                  foo: %w(bar baz)
               }
           })
     end

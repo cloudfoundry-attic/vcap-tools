@@ -36,8 +36,8 @@ describe Collector::Historian::CloudWatch do
                                                                         {name: "component", value: "unknown"},
                                                                         {name: "service_type", value: "unknown"},
                                                                         {name: "tag", value: "value"},
-                                                                        {name: "name", value: "Test/1"},
-                                                                        {name: "deployment", value: "dev114cw"},
+                                                                        {name: "foo", value: "bar"},
+                                                                        {name: "foo", value: "baz"},
                                                                     ]
                                                                 }]
                                                         })
@@ -51,7 +51,8 @@ describe Collector::Historian::CloudWatch do
                                        index: 1,
                                        component: "unknown",
                                        service_type: "unknown",
-                                       tag: "value"
+                                       tag: "value",
+                                       foo: %w(bar baz)
                                    }
                                })
     end
@@ -72,8 +73,8 @@ describe Collector::Historian::CloudWatch do
                                                                         {name: "plan", value: "free"},
                                                                         {name: "service_type", value: "unknown"},
                                                                         {name: "tag", value: "value"},
-                                                                        {name: "name", value: "Test/1"},
-                                                                        {name: "deployment", value: "dev114cw" },
+                                                                        {name: "foo", value: "bar"},
+                                                                        {name: "foo", value: "baz"},
                                                                     ]
                                                                 }]
                                                         })
@@ -87,7 +88,8 @@ describe Collector::Historian::CloudWatch do
                                               index: 1,
                                               plan: "free",
                                               service_type: "unknown",
-                                              tag: "value"
+                                              tag: "value",
+                                              foo: %w(bar baz)
                                           }
                                       })
     end

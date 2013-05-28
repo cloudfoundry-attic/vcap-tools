@@ -12,10 +12,11 @@ module Collector
 
       def send_data (data)
         time = data.fetch(:timestamp, Time.now.to_i)
-        dimensions = data[:tags].map {|key, value| {name: key.to_s, value: value.to_s } }
-
-        dimensions << {name: "name", value: "#{data[:tags][:job]}/#{data[:tags][:index]}"}
-        dimensions << {name: "deployment", value: Config.deployment_name}
+        dimensions = data[:tags].flat_map do |key, value|
+          Array(value).map do |v|
+            {name: key.to_s, value: v.to_s}
+          end
+        end
 
         metric = {
             namespace: "CF/Collector",

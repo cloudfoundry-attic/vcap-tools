@@ -11,7 +11,12 @@ module Collector
       end
 
       def send_data(properties)
-        tags = properties[:tags].collect { |tag| tag.join("=") }.sort.join(" ")
+        tags = (properties[:tags].flat_map do |key, value|
+          Array(value).map do |v|
+            "#{key}=#{v}"
+          end
+        end).sort.join(" ")
+
         command = "put #{properties[:key]} #{properties[:timestamp]} #{properties[:value]} #{tags}\n"
 
         ::Collector::Config.logger.debug1(command)

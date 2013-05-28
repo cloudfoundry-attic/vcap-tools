@@ -24,12 +24,12 @@ describe Collector::ServiceNodeHandler do
         key: "services.healthy_instances",
         timestamp: 10_000,
         value: "50.00",
-        tags: {
+        tags: hash_including({
           component: "node",
           index: 1,
           job: "Test",
           service_type: "unknown"
-        }
+        })
       })
 
       varz = {

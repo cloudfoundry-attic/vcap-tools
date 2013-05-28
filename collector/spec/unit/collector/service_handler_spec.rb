@@ -27,12 +27,12 @@ describe Collector::ServiceHandler do
         key: "services.healthy_instances",
         timestamp: 10_000,
         value: "50.00",
-        tags: {
+        tags: hash_including({
           component: "unknown",
           index: 1,
           job: "Test",
           service_type: "unknown"
-        }
+        })
       })
 
       varz = {
@@ -104,12 +104,12 @@ describe Collector::ServiceHandler do
         key: "services.online_nodes",
         timestamp: 10_000,
         value: 2,
-        tags: {
+        tags: hash_including({
           component: "unknown",
           index: 1,
           job: "Test",
           service_type: 'unknown'
-        }
+        })
       })
       varz = {
         "nodes" => {

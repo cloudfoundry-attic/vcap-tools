@@ -74,12 +74,12 @@ describe Collector::ServiceGatewayHandler do
         key: "services.online_nodes",
         timestamp: 10_000,
         value: 2,
-        tags: {
+        tags: hash_including({
           component: "gateway",
           index: 1,
           job: "Test",
           service_type: 'unknown'
-        }
+        })
       })
       varz = {
         "nodes" => {

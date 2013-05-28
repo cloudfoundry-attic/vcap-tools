@@ -103,7 +103,11 @@ module Collector
     # @param [String] name the metric name
     # @param [String, Fixnum] value the metric value
     def send_metric(name, value, tags = {})
-      tags =  tags.merge(Components.get_job_tags(@job)).merge(additional_tags).merge(job: @job, index: @index)
+      tags.merge!(additional_tags)
+      tags.merge!(Components.get_job_tags(@job))
+      tags.merge!(job: @job, index: @index)
+      tags.merge!(name: "#{@job}/#{@index}", deployment: Config.deployment_name)
+
       @historian.send_data({
                                key: name,
                                timestamp: @now,

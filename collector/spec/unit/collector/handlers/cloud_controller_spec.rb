@@ -34,7 +34,9 @@ describe Collector::Handler::CloudController do
       tags: {
         role: "core",
         job: "CloudController",
-        index: 0
+        index: 0,
+        name: "CloudController/0",
+        deployment: "untitled_dev"
       }
     )}
 
@@ -45,7 +47,9 @@ describe Collector::Handler::CloudController do
       tags: {
         role: "core",
         job: "CloudController",
-        index: 0
+        index: 0,
+        name: "CloudController/0",
+        deployment: "untitled_dev"
       }
     )}
 
@@ -56,7 +60,9 @@ describe Collector::Handler::CloudController do
       tags: {
         role: "core",
         job: "CloudController",
-        index: 0
+        index: 0,
+        name: "CloudController/0",
+        deployment: "untitled_dev"
       }
     )}
 
@@ -67,7 +73,9 @@ describe Collector::Handler::CloudController do
       tags: {
         role: "core",
         job: "CloudController",
-        index: 0
+        index: 0,
+        name: "CloudController/0",
+        deployment: "untitled_dev"
       }
     )}
 
@@ -78,7 +86,9 @@ describe Collector::Handler::CloudController do
       tags: {
         role: "core",
         job: "CloudController",
-        index: 0
+        index: 0,
+        name: "CloudController/0",
+        deployment: "untitled_dev"
       }
     )}
 
@@ -89,7 +99,9 @@ describe Collector::Handler::CloudController do
       tags: {
         role: "core",
         job: "CloudController",
-        index: 0
+        index: 0,
+        name: "CloudController/0",
+        deployment: "untitled_dev"
       }
     )}
 
@@ -100,7 +112,9 @@ describe Collector::Handler::CloudController do
       tags: {
         role: "core",
         job: "CloudController",
-        index: 0
+        index: 0,
+        name: "CloudController/0",
+        deployment: "untitled_dev"
       }
     )}
 
@@ -111,7 +125,9 @@ describe Collector::Handler::CloudController do
       tags: {
         role: "core",
         job: "CloudController",
-        index: 0
+        index: 0,
+        name: "CloudController/0",
+        deployment: "untitled_dev"
       }
     )}
 
@@ -123,7 +139,9 @@ describe Collector::Handler::CloudController do
       tags: {
         role: "core",
         job: "CloudController",
-        index: 0
+        index: 0,
+        name: "CloudController/0",
+        deployment: "untitled_dev"
       }
     )}
 
@@ -134,7 +152,9 @@ describe Collector::Handler::CloudController do
       tags: {
         role: "core",
         job: "CloudController",
-        index: 0
+        index: 0,
+        name: "CloudController/0",
+        deployment: "untitled_dev"
       }
     )}
 
@@ -145,7 +165,9 @@ describe Collector::Handler::CloudController do
       tags: {
         role: "core",
         job: "CloudController",
-        index: 0
+        index: 0,
+        name: "CloudController/0",
+        deployment: "untitled_dev"
       }
     )}
 
@@ -156,7 +178,9 @@ describe Collector::Handler::CloudController do
       tags: {
         role: "core",
         job: "CloudController",
-        index: 0
+        index: 0,
+        name: "CloudController/0",
+        deployment: "untitled_dev"
       }
     )}
   end
