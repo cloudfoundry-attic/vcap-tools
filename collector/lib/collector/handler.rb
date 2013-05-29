@@ -18,7 +18,7 @@ module Collector
       def register(job)
         job = job.to_s
         Config.logger.info("Registering handler: #{self} for job: #{job}")
-        raise "Job: #{job} already registered" if Handler.handler_map[job]
+        raise "Job: #{job} already registered" if Handler.handler_map.has_key?(job)
         Handler.handler_map[job] = self
       end
 
@@ -35,11 +35,8 @@ module Collector
       # @return [Handler] the handler for this job from the handler map or the
       #   default one
       def handler(historian, job, index, now, varz)
-        if handler_class = Handler.handler_map[job]
-          handler_class.new(historian, job, index, now, varz)
-        else
-          Handler.new(historian, job, index, now, varz)
-        end
+        handler_class = Handler.handler_map.fetch(job, Handler)
+        handler_class.new(historian, job, index, now, varz)
       end
     end
 

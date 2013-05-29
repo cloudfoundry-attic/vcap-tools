@@ -5,7 +5,7 @@ module Collector
   class Historian
     class DataDog
       def initialize(api_key, application_key)
-        @dog_client ||= Dogapi::Client.new(api_key, application_key)
+        @dog_client = Dogapi::Client.new(api_key, application_key)
       end
 
       def send_data(data)
