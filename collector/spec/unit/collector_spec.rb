@@ -193,7 +193,7 @@ describe Collector::Collector do
         yield handler
 
         Collector::Handler.should_receive(:handler).
-          with(kind_of(Collector::Historian), "collector", 0, 1000).
+          with(kind_of(Collector::Historian), "collector", 0, 1000, {}).
           and_return(handler)
 
         collector.send_local_metrics

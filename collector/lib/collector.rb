@@ -122,7 +122,9 @@ module Collector
 
     # Generates metrics that don't require any interactions with varz or healthz
     def send_local_metrics
-      handler = Handler.handler(@historian, "collector", Config.index, Time.now.to_i)
+      # TODO: we're using an empty hash for the handler's varz, so this may cause problems if the varz
+      # provides information required for any tags (e.g. in the DEA handler).
+      handler = Handler.handler(@historian, "collector", Config.index, Time.now.to_i, {})
       handler.send_latency_metric("nats.latency.1m", @nats_latency.value)
     end
 
