@@ -12,4 +12,16 @@ describe Collector::Handler::Dea do
       }
     end
   end
+
+  describe "process" do
+    it "sends the can_stage metric" do
+      varz = {
+        "can_stage" => 1
+      }
+
+      handler = Collector::Handler::Dea.new(nil, nil, nil, nil, varz)
+      handler.should_receive(:send_metric).with("can_stage", 1)
+      handler.process
+    end
+  end
 end

@@ -8,6 +8,10 @@ module Collector
       def additional_tags
         { stack: varz['stacks'] }
       end
+
+      def process
+        send_metric("can_stage", varz["can_stage"])
+      end
     end
   end
 end
