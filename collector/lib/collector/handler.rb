@@ -114,9 +114,9 @@ module Collector
     #
     # @param [String] name the metric name
     # @param [Hash] value the latency metric value
-    def send_latency_metric(name, value)
+    def send_latency_metric(name, value, tags = {})
       if value && value["samples"] && value["samples"] > 0
-        send_metric(name, value["value"] / value["samples"])
+        send_metric(name, value["value"] / value["samples"], tags)
       end
     end
   end

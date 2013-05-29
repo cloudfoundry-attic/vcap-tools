@@ -92,10 +92,10 @@ describe Collector::Handler do
           with({key: "some_key",
                 timestamp: 10000,
                 value: 2,
-                tags: {index: 1, job: "Test", name: "Test/1", deployment: "untitled_dev"}})
+                tags: {index: 1, job: "Test", name: "Test/1", deployment: "untitled_dev", foo: "bar"}})
 
       handler = Collector::Handler.handler(historian, "Test", 1, 10000, {})
-      handler.send_metric("some_key", 2)
+      handler.send_metric("some_key", 2, {foo: "bar"})
     end
 
     it "should not allow additional_tags to override base tags" do
@@ -121,15 +121,15 @@ describe Collector::Handler do
   end
 
   describe "send_latency_metric" do
-    it "should send the metric to the TSDB server" do
-      connection = mock(:TsdbConnection)
-      connection.should_receive(:send_data).
+    it "should send the metric to the historian" do
+      historian = mock("historian")
+      historian.should_receive(:send_data).
           with({key: "latency_key",
                 timestamp: 10000,
                 value: 5,
-                tags: hash_including({index: 1, job: "Test"})})
-      handler = Collector::Handler.handler(connection, "Test", 1, 10000, {})
-      handler.send_latency_metric("latency_key", {"value" => 10, "samples" => 2})
+                tags: hash_including({index: 1, job: "Test", foo: "bar"})})
+      handler = Collector::Handler.handler(historian, "Test", 1, 10000, {})
+      handler.send_latency_metric("latency_key", {"value" => 10, "samples" => 2}, {foo: "bar"})
     end
   end
 end
