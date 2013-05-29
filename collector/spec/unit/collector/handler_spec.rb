@@ -39,12 +39,6 @@ describe Collector::Handler do
       handler.do_process()
     end
 
-    it "sends out 'mem' if specified" do
-      handler = Collector::Handler.new(nil, nil, nil, nil, {"mem" => 2048})
-      handler.should_receive(:send_metric).with("mem", 2)
-      handler.do_process
-    end
-
     it "sends out 'mem_used_bytes' if specified" do
       handler = Collector::Handler.new(nil, nil, nil, nil, {"mem_used_bytes" => 2048})
       handler.should_receive(:send_metric).with("mem_used_bytes", 2048)

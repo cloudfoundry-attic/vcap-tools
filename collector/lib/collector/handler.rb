@@ -88,9 +88,6 @@ module Collector
     # Called by the collector to process the varz. Processes common
     # metric data and then calls process() to add subclass behavior.
     def do_process
-      # TODO: "mem" probably isn't used and should be removed
-      send_metric("mem", @varz["mem"] / 1024) if @varz["mem"]
-
       send_metric("mem_free_bytes", @varz["mem_free_bytes"]) if @varz["mem_free_bytes"]
       send_metric("mem_used_bytes", @varz["mem_used_bytes"]) if @varz["mem_used_bytes"]
       send_metric("cpu_load_avg", @varz["cpu_load_avg"]) if @varz["cpu_load_avg"]
