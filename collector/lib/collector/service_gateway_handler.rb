@@ -3,15 +3,17 @@ require_relative "service_handler"
 
 module Collector
   class ServiceGatewayHandler < ServiceHandler
-    def process
-      process_plan_score_metric
-      process_online_nodes
+    def process(context)
+      process_plan_score_metric(context)
+      process_online_nodes(context)
     end
 
     # Sum up all nodes' available_capacity value for each service, report
     # low_water & high_water value at the same time.
     #
-    def process_plan_score_metric
+    def process_plan_score_metric(context)
+      varz = context.varz
+
       return unless varz.include?("plans")
       if varz["plans"]
         varz["plans"].each do |plan|
@@ -19,9 +21,9 @@ module Collector
             :plan => plan["plan"],
           }
           allow_over_provisioning = plan.delete("allow_over_provisioning") ? 1 : 0
-          send_metric("services.plans.allow_over_provisioning", allow_over_provisioning, tags)
+          send_metric("services.plans.allow_over_provisioning", allow_over_provisioning, context, tags)
           plan.each do |metric_name, value|
-            send_metric("services.plans.#{metric_name}", value, tags)
+            send_metric("services.plans.#{metric_name}", value, context, tags)
           end
         end
       end
@@ -30,9 +32,10 @@ module Collector
     # Get online nodes varz for each service gateway, report the total
     # number of online nodes
     #
-    def process_online_nodes
+    def process_online_nodes(context)
+      varz = context.varz
       return unless varz.include?("nodes")
-      send_metric("services.online_nodes", varz["nodes"].length)
+      send_metric("services.online_nodes", varz["nodes"].length, context)
     end
 
     def component

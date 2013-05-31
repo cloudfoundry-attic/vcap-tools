@@ -4,10 +4,11 @@ describe Collector::Handler::Dea do
 
   describe "#additional_tags" do
     it "tags metrics with the stack type" do
-      collector = Collector::Handler::Dea.new(nil, nil, nil, nil, {"stacks" => ["Linux", "Windows"]})
+      context = Collector::HandlerContext.new(nil, nil, {"stacks" => ["Linux", "Windows"]})
+      handler = Collector::Handler::Dea.new(nil, nil)
 
       # note stacks in the varz becomes stack singular in the tags
-      collector.additional_tags.should == {
+      handler.additional_tags(context).should == {
         stack: ["Linux", "Windows"]
       }
     end
@@ -19,9 +20,10 @@ describe Collector::Handler::Dea do
         "can_stage" => 1
       }
 
-      handler = Collector::Handler::Dea.new(nil, nil, nil, nil, varz)
-      handler.should_receive(:send_metric).with("can_stage", 1)
-      handler.process
+      context = Collector::HandlerContext.new(nil, nil, varz)
+      handler = Collector::Handler::Dea.new(nil, nil)
+      handler.should_receive(:send_metric).with("can_stage", 1, context)
+      handler.process(context)
     end
   end
 end

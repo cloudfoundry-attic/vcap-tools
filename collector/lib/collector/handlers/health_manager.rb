@@ -21,18 +21,20 @@ module Collector
               }
       }
 
-      def process
+
+      def process(context)
+        varz = context.varz
         METRICS.each do |type, metric_map|
           if type_varz = varz[type]
             metric_map.each do |varz_name, metric_name|
               if type_varz[varz_name]
-                send_metric("#{type}.#{metric_name}", type_varz[varz_name])
+                send_metric("#{type}.#{metric_name}", type_varz[varz_name], context)
               end
             end
           end
         end
 
-        send_metric("total_users", varz["total_users"]) if varz["total_users"]
+        send_metric("total_users", varz["total_users"], context) if varz["total_users"]
       end
     end
   end

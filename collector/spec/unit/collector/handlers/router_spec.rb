@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Collector::Handler::Router do
-  describe "#process" do
+  describe "process" do
     let(:varz) do
       JSON.parse <<-JSON
 {
@@ -35,7 +35,8 @@ describe Collector::Handler::Router do
       JSON
     end
 
-    subject { Collector::Handler::Router.new(nil, nil, nil, nil, varz) }
+    let(:context) { Collector::HandlerContext.new(nil, nil, varz) }
+    subject { Collector::Handler::Router.new(nil, nil) }
 
     describe "normal components" do
       let (:component) do
@@ -70,18 +71,18 @@ describe Collector::Handler::Router do
 
         tags = {"component" => "component-1"}
 
-        subject.should_receive(:send_metric).with("router.requests", 1234, tags)
+        subject.should_receive(:send_metric).with("router.requests", 1234, context, tags)
         component_latency = varz["tags"]["component"]["component-1"]["latency"]
-        subject.should_receive(:send_latency_metric).with("router.latency.1m", component_latency, tags)
-        subject.should_receive(:send_metric).with("router.responses", 200, tags.merge("status" => "2xx"))
-        subject.should_receive(:send_metric).with("router.responses", 300, tags.merge("status" => "3xx"))
-        subject.should_receive(:send_metric).with("router.responses", 400, tags.merge("status" => "4xx"))
-        subject.should_receive(:send_metric).with("router.responses", 500, tags.merge("status" => "5xx"))
-        subject.should_receive(:send_metric).with("router.responses", 1000, tags.merge("status" => "xxx"))
+        subject.should_receive(:send_latency_metric).with("router.latency.1m", component_latency, context, tags)
+        subject.should_receive(:send_metric).with("router.responses", 200, context, tags.merge("status" => "2xx"))
+        subject.should_receive(:send_metric).with("router.responses", 300, context, tags.merge("status" => "3xx"))
+        subject.should_receive(:send_metric).with("router.responses", 400, context, tags.merge("status" => "4xx"))
+        subject.should_receive(:send_metric).with("router.responses", 500, context, tags.merge("status" => "5xx"))
+        subject.should_receive(:send_metric).with("router.responses", 1000, context, tags.merge("status" => "xxx"))
 
-        subject.should_receive(:send_metric).with("router.total_requests", 68213)
+        subject.should_receive(:send_metric).with("router.total_requests", 68213, context)
 
-        subject.process
+        subject.process(context)
       end
     end
 
@@ -119,12 +120,12 @@ describe Collector::Handler::Router do
 
         tags = {"component" => "app", "dea" => "1"}
 
-        subject.should_receive(:send_metric).with("router.requests", 5678, tags)
+        subject.should_receive(:send_metric).with("router.requests", 5678, context, tags)
         subject.stub(:send_latency_metric)
-        subject.stub(:send_metric).with("router.responses", anything, anything)
-        subject.should_receive(:send_metric).with("router.total_requests", 68213)
+        subject.stub(:send_metric).with("router.responses", anything, context, anything)
+        subject.should_receive(:send_metric).with("router.total_requests", 68213, context)
 
-        subject.process
+        subject.process(context)
       end
     end
   end

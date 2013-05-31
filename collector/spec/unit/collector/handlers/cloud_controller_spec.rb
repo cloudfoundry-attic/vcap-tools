@@ -10,7 +10,8 @@ describe Collector::Handler::CloudController do
       end
     end
   end
-  let(:handler) { Collector::Handler::CloudController.new(historian, "CloudController", 0, now, fixture(:cloud_controller)) }
+  let(:context) { Collector::HandlerContext.new(0, now, fixture(:cloud_controller)) }
+  let(:handler) { Collector::Handler::CloudController.new(historian, "CloudController") }
 
   it "should register itself as a handler" do
     Collector::Handler.handler_map.clear
@@ -23,7 +24,7 @@ describe Collector::Handler::CloudController do
 
   describe "process" do
     subject do
-      handler.process
+      handler.process(context)
       data
     end
 

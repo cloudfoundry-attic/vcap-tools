@@ -1,7 +1,7 @@
 require "spec_helper"
 
 describe Collector::Handler::MongodbNode do
-  let(:handler) { described_class.new(nil, nil, nil, nil, nil) }
+  let(:handler) { described_class.new(nil, nil) }
 
   it "should provide the correct component_type" do
     handler.component.should == "node"

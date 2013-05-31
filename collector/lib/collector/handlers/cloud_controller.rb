@@ -7,20 +7,23 @@ module Collector
 
       DHMS_IN_SECS = [24 * 60 * 60, 60 * 60, 60, 1].freeze
 
-      def process
+      def process(context)
+        varz = context.varz
+
+
         varz["vcap_sinatra"]["requests"].each do |key, value|
-          send_metric("cc.requests.#{key}", value)
+          send_metric("cc.requests.#{key}", value, context)
         end
 
         aggregate_http_status(varz).each do |key, value|
-          send_metric("cc.http_status.#{key}", value)
+          send_metric("cc.http_status.#{key}", value, context)
         end
 
         varz["vcap_sequel"]["connection_pool"].each do |key, value|
-          send_metric("cc.db.pool.#{key}", value)
+          send_metric("cc.db.pool.#{key}", value, context)
         end
 
-        send_metric("cc.uptime", uptime_in_seconds(varz))
+        send_metric("cc.uptime", uptime_in_seconds(varz), context)
       end
 
       private

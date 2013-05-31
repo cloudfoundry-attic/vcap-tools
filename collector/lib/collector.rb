@@ -145,8 +145,9 @@ module Collector
               varz = Yajl::Parser.parse(http.response)
               now = Time.now.to_i
 
-              handler = Handler.handler(@historian, job, index, now, varz)
-              handler.do_process()
+              handler = Handler.handler(@historian, job)
+              ctx = HandlerContext.new(index, now, varz)
+              handler.do_process(ctx)
             rescue => e
               @logger.warn("Error processing varz: #{e.message}; fetched from #{host}")
               @logger.warn(e)

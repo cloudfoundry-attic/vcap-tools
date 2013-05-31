@@ -4,15 +4,16 @@ require File.expand_path("../../spec_helper", File.dirname(__FILE__))
 
 describe Collector::ServiceNodeHandler do
   it "has the right component type" do
-    handler = Collector::ServiceNodeHandler.new(nil, nil, nil, nil, nil)
+    handler = Collector::ServiceNodeHandler.new(nil, nil)
     handler.component.should == "node"
   end
 
   describe "#process" do
     it "should call process_healthy_instances_metric" do
-      handler = Collector::ServiceNodeHandler.new(nil, nil, nil, nil, nil)
-      handler.should_receive(:process_healthy_instances_metric)
-      handler.process
+      context = Object.new
+      handler = Collector::ServiceNodeHandler.new(nil, nil)
+      handler.should_receive(:process_healthy_instances_metric).with(context)
+      handler.process(context)
     end
   end
 
@@ -40,8 +41,9 @@ describe Collector::ServiceNodeHandler do
           4 => 'ok'
         }
       }
-      handler = Collector::ServiceNodeHandler.new(historian, "Test", 1, 10000, varz)
-      handler.process_healthy_instances_metric
+      context = Collector::HandlerContext.new(1, 10000, varz)
+      handler = Collector::ServiceNodeHandler.new(historian, "Test")
+      handler.process_healthy_instances_metric(context)
     end
   end
 end

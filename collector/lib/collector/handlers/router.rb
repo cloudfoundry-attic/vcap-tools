@@ -5,7 +5,9 @@ module Collector
     class Router < Handler
       register Components::ROUTER_COMPONENT
 
-      def process
+      def process(context)
+        varz = context.varz
+
         return unless varz["tags"]
         varz["tags"].each do |key, values|
           values.each do |value, metrics|
@@ -19,15 +21,15 @@ module Collector
               tags = {key => value}
             end
 
-            send_metric("router.requests", metrics["requests"], tags)
-            send_latency_metric("router.latency.1m", metrics["latency"], tags)
+            send_metric("router.requests", metrics["requests"], context, tags)
+            send_latency_metric("router.latency.1m", metrics["latency"], context, tags)
             ["2xx", "3xx", "4xx", "5xx", "xxx"].each do |status_code|
-              send_metric("router.responses", metrics["responses_#{status_code}"], tags.merge("status" => status_code))
+              send_metric("router.responses", metrics["responses_#{status_code}"], context, tags.merge("status" => status_code))
             end
           end
         end
 
-        send_metric("router.total_requests", varz["requests"])
+        send_metric("router.total_requests", varz["requests"], context)
 
       end
     end

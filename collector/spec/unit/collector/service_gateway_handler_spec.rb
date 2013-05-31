@@ -4,16 +4,17 @@ require File.expand_path("../../spec_helper", File.dirname(__FILE__))
 
 describe Collector::ServiceGatewayHandler do
   it "has the right component type" do
-    handler = Collector::ServiceGatewayHandler.new(nil, nil, nil, nil, nil)
+    handler = Collector::ServiceGatewayHandler.new(nil, nil)
     handler.component.should == "gateway"
   end
 
   describe "#process" do
     it "should call the other process methods" do
-      handler = Collector::ServiceGatewayHandler.new(nil, nil, nil, nil, nil)
-      handler.should_receive(:process_plan_score_metric)
-      handler.should_receive(:process_online_nodes)
-      handler.process
+      context = Object.new
+      handler = Collector::ServiceGatewayHandler.new(nil, nil)
+      handler.should_receive(:process_plan_score_metric).with(context)
+      handler.should_receive(:process_online_nodes).with(context)
+      handler.process(context)
     end
   end
 
@@ -44,10 +45,12 @@ describe Collector::ServiceGatewayHandler do
       }
     end
 
+    let(:context) { Collector::HandlerContext.new(1, 10000, varz) }
+
     def self.test_report_metric(metric_name, key, value)
       it "should report #{key} to TSDB server" do
-        handler = Collector::ServiceGatewayHandler.new(historian, "Test", 1, 10000, varz)
-        handler.process_plan_score_metric
+        handler = Collector::ServiceGatewayHandler.new(historian, "Test")
+        handler.process_plan_score_metric(context)
         history_data.fetch(metric_name).should have(1).item
         history_data.fetch(metric_name).fetch(0).should include(
           key: metric_name,
@@ -93,8 +96,9 @@ describe Collector::ServiceGatewayHandler do
           }
         }
       }
-      handler = Collector::ServiceGatewayHandler.new(historian, "Test", 1, 10000, varz)
-      handler.process_online_nodes
+      context = Collector::HandlerContext.new(1, 10000, varz)
+      handler = Collector::ServiceGatewayHandler.new(historian, "Test")
+      handler.process_online_nodes(context)
     end
   end
 

@@ -2,6 +2,11 @@ require 'spec_helper'
 #require 'collector/handlers/health_manager'
 
 describe "Collector::Handler::HealthManager" do
+  before do
+    Collector::Handler.handler_map.clear
+    Collector::Handler.instance_map.clear
+  end
+
   it "sends metrics for every entry" do
     #    Collector::Handler::HealthManager.should_receive(:register).and_return(nil)
 
@@ -26,17 +31,17 @@ describe "Collector::Handler::HealthManager" do
         }
       }
 
-      handler =  Collector::Handler::HealthManager.new(nil, nil, nil, nil, varz)
+      context = Collector::HandlerContext.new(nil, nil, varz)
+      handler =  Collector::Handler::HealthManager.new(nil, nil)
 
-      handler.should_receive(:send_metric).with("running.crashes", 0)
-      handler.should_receive(:send_metric).with("running.running_apps", 98)
-      handler.should_receive(:send_metric).with("total.apps", 150)
-      handler.should_receive(:send_metric).with("total_users", 687)
+      handler.should_receive(:send_metric).with("running.crashes", 0, context)
+      handler.should_receive(:send_metric).with("running.running_apps", 98, context)
+      handler.should_receive(:send_metric).with("total.apps", 150, context)
+      handler.should_receive(:send_metric).with("total_users", 687, context)
 
       handler.should_receive(:send_metric).exactly(12 - 4).times
 
-      handler.process
-      Collector::Handler.handler_map = {}
+      handler.process(context)
     end
   end
 end

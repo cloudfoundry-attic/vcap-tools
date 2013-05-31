@@ -5,12 +5,12 @@ module Collector
     class Dea < Handler
       register Components::DEA_COMPONENT
 
-      def additional_tags
-        { stack: varz['stacks'] }
+      def additional_tags(context)
+        { stack: context.varz['stacks'] }
       end
 
-      def process
-        send_metric("can_stage", varz["can_stage"])
+      def process(context)
+        send_metric("can_stage", context.varz["can_stage"], context)
       end
     end
   end

@@ -103,6 +103,7 @@ describe Collector::Collector do
 
         collector.fetch_varz
 
+
         callback.should_not be_nil
         handler = mock(:Handler)
 
@@ -110,12 +111,21 @@ describe Collector::Collector do
           "test" => "foo"
         }))
 
-        handler.should_receive(:do_process)
+        Time.stub(:now).and_return(123)
+        received_context = nil
+        handler.should_receive(:do_process).with(kind_of(Collector::HandlerContext)) do |ctx|
+          received_context = ctx
+        end
 
         Collector::Handler.should_receive(:handler).
-          with(kind_of(Collector::Historian), "Test", 1, kind_of(Fixnum), { "test" => "foo" }).
+          with(kind_of(Collector::Historian), "Test").
           and_return(handler)
+
         callback.call
+
+        expect(received_context.index).to eq 1
+        expect(received_context.now).to eq 123
+        expect(received_context.varz).to eq({ "test" => "foo" })
       end
     end
   end
