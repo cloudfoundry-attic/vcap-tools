@@ -10,7 +10,7 @@ module Collector
                       "instances" => "instances",
                       "started_instances" => "started_instances",
                       "memory" => "memory",
-                      "started_memory" => "started_memory"
+                      "started_memory" => "started_memory",
               },
               "running" => {
                       "apps" => "running_apps",
@@ -34,7 +34,19 @@ module Collector
           end
         end
 
-        send_metric("total_users", varz["total_users"], context) if varz["total_users"]
+        total_users = varz["total_users"]
+        return unless total_users
+
+        send_metric("total_users", total_users, context)
+
+        if @last_num_users
+          new_users = total_users - @last_num_users
+          rate = new_users / (context.now - @last_check_timestamp)
+          send_metric("user_rate", rate, context)
+        end
+
+        @last_num_users = total_users
+        @last_check_timestamp = context.now
       end
     end
   end
