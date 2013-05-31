@@ -14,6 +14,7 @@ describe Collector::ServiceGatewayHandler do
       handler = Collector::ServiceGatewayHandler.new(nil, nil)
       handler.should_receive(:process_plan_score_metric).with(context)
       handler.should_receive(:process_online_nodes).with(context)
+      handler.should_receive(:process_response_codes).with(context)
       handler.process(context)
     end
   end
@@ -66,7 +67,55 @@ describe Collector::ServiceGatewayHandler do
     test_report_metric("services.plans.used_capacity", "used_capacity", 50)
     test_report_metric("services.plans.max_capacity", "max_capacity", 500)
     test_report_metric("services.plans.available_capacity", "available_capacity", 450)
+  end
 
+  describe "response code metrics" do
+    class FakeHistorian
+      attr_reader :sent_data
+
+      def initialize
+        @sent_data = []
+      end
+
+      def send_data(data)
+        @sent_data << data
+      end
+
+      def sent_data?(key, value, tags)
+        @sent_data.any? do |data|
+          data[:key] == key && data[:value] == value &&
+            data[:tags] == data[:tags].merge(tags)
+        end
+      end
+    end
+
+    let(:varz) do
+      {
+        "responses_metrics" => {
+          "responses_2xx" => 2,
+          "responses_3xx" => 3,
+          "responses_4xx" => 4,
+          "responses_5xx" => 5,
+        }
+      }
+    end
+
+    let(:timestamp) { 1000 }
+    let(:historian) { FakeHistorian.new }
+    let(:context) { Collector::HandlerContext.new(1, timestamp, varz) }
+    let(:handler) { Collector::ServiceGatewayHandler.new(historian, "job") }
+
+    it "reports response code metrics to the historian" do
+      handler.process_response_codes(context)
+      historian.sent_data?("services.http_status.2xx", 2,
+        {service_type: "unknown", component: "gateway"}).should == true
+      historian.sent_data?("services.http_status.3xx", 3,
+        {service_type: "unknown", component: "gateway"}).should == true
+      historian.sent_data?("services.http_status.4xx", 4,
+        {service_type: "unknown", component: "gateway"}).should == true
+      historian.sent_data?("services.http_status.5xx", 5,
+        {service_type: "unknown", component: "gateway"}).should == true
+    end
   end
 
   describe :process_online_nodes do

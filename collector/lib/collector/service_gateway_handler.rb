@@ -6,6 +6,7 @@ module Collector
     def process(context)
       process_plan_score_metric(context)
       process_online_nodes(context)
+      process_response_codes(context)
     end
 
     # Sum up all nodes' available_capacity value for each service, report
@@ -29,11 +30,22 @@ module Collector
       end
     end
 
+    def process_response_codes(context)
+      varz = context.varz
+
+      return unless varz.has_key?("responses_metrics")
+      varz.fetch("responses_metrics").each do |response_range, counter|
+        response_code = response_range.split("_")[1]
+        send_metric("services.http_status.#{response_code}", counter, context)
+      end
+    end
+
     # Get online nodes varz for each service gateway, report the total
     # number of online nodes
     #
     def process_online_nodes(context)
       varz = context.varz
+
       return unless varz.include?("nodes")
       send_metric("services.online_nodes", varz["nodes"].length, context)
     end
