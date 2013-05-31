@@ -1,5 +1,3 @@
-# Copyright (c) 2009-2012 VMware, Inc.
-
 require File.expand_path("../../spec_helper", File.dirname(__FILE__))
 
 describe Collector::ServiceGatewayHandler do
@@ -10,7 +8,6 @@ describe Collector::ServiceGatewayHandler do
 
   describe "#process" do
     it "should call the other process methods" do
-      context = Object.new
       handler = Collector::ServiceGatewayHandler.new(nil, nil)
       handler.should_receive(:process_plan_score_metric).with(context)
       handler.should_receive(:process_online_nodes).with(context)
@@ -19,17 +16,32 @@ describe Collector::ServiceGatewayHandler do
     end
   end
 
-  describe "#process_plan_score_metric" do
-    let(:history_data) { Hash.new { |h, k| h.store(k, []) } }
-    let(:historian) do
-      double("Historian").tap do |h|
-        h.stub(:send_data) do |data|
-          name = data.fetch(:key)
-          history_data[name] << data
-        end
-      end
+  class FakeHistorian
+    attr_reader :sent_data
+
+    def initialize
+      @sent_data = []
     end
 
+    def send_data(data)
+      @sent_data << data
+    end
+
+    def has_sent_data?(key, value, tags={})
+      @sent_data.any? do |data|
+        data[:key] == key && data[:value] == value &&
+          data[:tags] == data[:tags].merge(tags)
+      end
+    end
+  end
+
+  let(:historian) { FakeHistorian.new }
+  let(:timestamp) { 123456789 }
+  let(:handler) { Collector::ServiceGatewayHandler.new(historian, "job") }
+  let(:varz) { {} }
+  let(:context) { Collector::HandlerContext.new(1, timestamp, varz) }
+
+  describe "process_plan_score_metric" do
     let(:varz) do
       {
         "plans" => [
@@ -46,49 +58,19 @@ describe Collector::ServiceGatewayHandler do
       }
     end
 
-    let(:context) { Collector::HandlerContext.new(1, 10000, varz) }
-
-    def self.test_report_metric(metric_name, key, value)
-      it "should report #{key} to TSDB server" do
-        handler = Collector::ServiceGatewayHandler.new(historian, "Test")
-        handler.process_plan_score_metric(context)
-        history_data.fetch(metric_name).should have(1).item
-        history_data.fetch(metric_name).fetch(0).should include(
-          key: metric_name,
-          value: value,
-        )
-      end
+    it "reports plan information" do
+      handler.process_plan_score_metric(context)
+      historian.should have_sent_data("services.plans.low_water", 100)
+      historian.should have_sent_data("services.plans.high_water", 1400)
+      historian.should have_sent_data("services.plans.score", 150)
+      historian.should have_sent_data("services.plans.allow_over_provisioning", 0)
+      historian.should have_sent_data("services.plans.used_capacity", 50)
+      historian.should have_sent_data("services.plans.max_capacity", 500)
+      historian.should have_sent_data("services.plans.available_capacity", 450)
     end
-
-    test_report_metric("services.plans.low_water", "low_water", 100)
-    test_report_metric("services.plans.high_water", "high_water", 1400)
-    test_report_metric("services.plans.score", "score", 150)
-    test_report_metric("services.plans.allow_over_provisioning", "allow_over_provisioning", 0)
-    test_report_metric("services.plans.used_capacity", "used_capacity", 50)
-    test_report_metric("services.plans.max_capacity", "max_capacity", 500)
-    test_report_metric("services.plans.available_capacity", "available_capacity", 450)
   end
 
   describe "response code metrics" do
-    class FakeHistorian
-      attr_reader :sent_data
-
-      def initialize
-        @sent_data = []
-      end
-
-      def send_data(data)
-        @sent_data << data
-      end
-
-      def sent_data?(key, value, tags)
-        @sent_data.any? do |data|
-          data[:key] == key && data[:value] == value &&
-            data[:tags] == data[:tags].merge(tags)
-        end
-      end
-    end
-
     let(:varz) do
       {
         "responses_metrics" => {
@@ -100,40 +82,18 @@ describe Collector::ServiceGatewayHandler do
       }
     end
 
-    let(:timestamp) { 1000 }
-    let(:historian) { FakeHistorian.new }
-    let(:context) { Collector::HandlerContext.new(1, timestamp, varz) }
-    let(:handler) { Collector::ServiceGatewayHandler.new(historian, "job") }
-
     it "reports response code metrics to the historian" do
       handler.process_response_codes(context)
-      historian.sent_data?("services.http_status.2xx", 2,
-        {service_type: "unknown", component: "gateway"}).should == true
-      historian.sent_data?("services.http_status.3xx", 3,
-        {service_type: "unknown", component: "gateway"}).should == true
-      historian.sent_data?("services.http_status.4xx", 4,
-        {service_type: "unknown", component: "gateway"}).should == true
-      historian.sent_data?("services.http_status.5xx", 5,
-        {service_type: "unknown", component: "gateway"}).should == true
+      historian.should have_sent_data("services.http_status.2xx", 2, {service_type: "unknown", component: "gateway"})
+      historian.should have_sent_data("services.http_status.3xx", 3, {service_type: "unknown", component: "gateway"})
+      historian.should have_sent_data("services.http_status.4xx", 4, {service_type: "unknown", component: "gateway"})
+      historian.should have_sent_data("services.http_status.5xx", 5, {service_type: "unknown", component: "gateway"})
     end
   end
 
   describe :process_online_nodes do
-    it "should report online nodes number to TSDB server" do
-      historian = mock("Historian")
-      historian.should_receive(:send_data).
-        with({
-        key: "services.online_nodes",
-        timestamp: 10_000,
-        value: 2,
-        tags: hash_including({
-          component: "gateway",
-          index: 1,
-          job: "Test",
-          service_type: 'unknown'
-        })
-      })
-      varz = {
+    let(:varz) do
+      {
         "nodes" => {
           "node_0" => {
             "available_capacity" => 50,
@@ -145,9 +105,11 @@ describe Collector::ServiceGatewayHandler do
           }
         }
       }
-      context = Collector::HandlerContext.new(1, 10000, varz)
-      handler = Collector::ServiceGatewayHandler.new(historian, "Test")
+    end
+
+    it "should report online nodes number to TSDB server" do
       handler.process_online_nodes(context)
+      historian.should have_sent_data("services.online_nodes", 2, { component: "gateway", index: 1, job: "job", service_type: "unknown" })
     end
   end
 
