@@ -3,8 +3,7 @@
 require File.expand_path("../spec_helper", File.dirname(__FILE__))
 
 describe Collector::Collector do
-
-  describe :process_component_discovery do
+  describe "component discovery" do
     it "should record components when they announce themeselves" do
       create_fake_collector do |collector, _|
         components = collector.instance_eval { @components }
@@ -32,7 +31,7 @@ describe Collector::Collector do
     end
   end
 
-  describe :prune_components do
+  describe "pruning components" do
     it "should prune old components" do
       create_fake_collector do |collector, _, _|
         Collector::Config.prune_interval = 10
@@ -130,8 +129,7 @@ describe Collector::Collector do
     end
   end
 
-  describe :fetch_healthz do
-
+  describe "failing healthz" do
     def setup_healthz_request
       create_fake_collector do |collector, _|
         collector.process_component_discovery(Yajl::Encoder.encode({
@@ -190,11 +188,11 @@ describe Collector::Collector do
 
   end
 
-  describe :local_metrics do
+  describe "local metrics" do
     def send_local_metrics
       Time.stub!(:now).and_return(1000)
 
-      create_fake_collector do |collector, tsdb, nats|
+      create_fake_collector do |collector, _, _|
         collector.process_nats_ping(997)
         collector.process_nats_ping(998)
         collector.process_nats_ping(999)
@@ -203,7 +201,7 @@ describe Collector::Collector do
         yield handler
 
         Collector::Handler.should_receive(:handler).
-          with(kind_of(Collector::Historian), "collector", 0, 1000, {}).
+          with(kind_of(Collector::Historian), "collector").
           and_return(handler)
 
         collector.send_local_metrics
@@ -213,13 +211,12 @@ describe Collector::Collector do
     it "should send nats latency rolling metric" do
       send_local_metrics do |handler|
         latency = {:value => 6000, :samples => 3}
-        handler.should_receive(:send_latency_metric).
-            with("nats.latency.1m", latency)
+        handler.should_receive(:send_latency_metric).with("nats.latency.1m", latency, kind_of(Collector::HandlerContext))
       end
     end
   end
 
-  describe :authorization_headers do
+  describe "authorization headers" do
     it "should correctly encode long credentials (no CR/LF)" do
       create_fake_collector do |collector, _, _|
         collector.authorization_headers({:credentials => ["A" * 64, "B" * 64]}).

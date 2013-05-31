@@ -124,8 +124,9 @@ module Collector
     def send_local_metrics
       # TODO: we're using an empty hash for the handler's varz, so this may cause problems if the varz
       # provides information required for any tags (e.g. in the DEA handler).
-      handler = Handler.handler(@historian, "collector", Config.index, Time.now.to_i, {})
-      handler.send_latency_metric("nats.latency.1m", @nats_latency.value)
+      context = HandlerContext.new(Config.index, Time.now.to_i, {})
+      handler = Handler.handler(@historian, "collector")
+      handler.send_latency_metric("nats.latency.1m", @nats_latency.value, context)
     end
 
     # Fetches the varzs from all the components and calls the proper {Handler}
