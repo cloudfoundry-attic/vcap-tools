@@ -39,7 +39,7 @@ describe Collector::Handler::Router do
     subject { Collector::Handler::Router.new(nil, nil) }
 
     describe "normal components" do
-      let (:component) do
+      let(:component) do
         JSON.parse <<-JSON
  {
     "latency": {
@@ -88,7 +88,7 @@ describe Collector::Handler::Router do
 
 
     describe "dea-related components (i.e., apps)" do
-      let (:component) do
+      let(:component) do
         JSON.parse <<-JSON
  {
     "latency": {
@@ -118,7 +118,7 @@ describe Collector::Handler::Router do
       it "sends metrics tagged with component:app and dea:foo" do
         varz['tags']['component']['dea-1-blahblah'] = component
 
-        tags = {"component" => "app", "dea" => "1"}
+        tags = {"component" => "dea", "index" => "1"}
 
         subject.should_receive(:send_metric).with("router.requests", 5678, context, tags)
         subject.stub(:send_latency_metric)
