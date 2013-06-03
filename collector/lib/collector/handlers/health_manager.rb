@@ -41,7 +41,7 @@ module Collector
 
         if @last_num_users
           new_users = total_users - @last_num_users
-          rate = new_users / (context.now - @last_check_timestamp)
+          rate = new_users.to_f / (context.now - @last_check_timestamp)
           send_metric("user_rate", rate, context)
         end
 

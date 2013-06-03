@@ -44,15 +44,19 @@ describe "Collector::Handler::HealthManager" do
 
   describe "user rate metric" do
     it "sends the number of new users since the last varz check" do
+      num_new_users = 1
+      time_diff = 10 # seconds
+
+
       handler.should_receive(:send_metric).twice.with("total_users", anything, anything)
-      handler.should_receive(:send_metric).once.with("user_rate", 50, anything)
+      handler.should_receive(:send_metric).once.with("user_rate", 0.1, anything)
 
       varz = { "total_users" => 100 }
       context = Collector::HandlerContext.new(nil, 0, varz)
       handler.process(context)
 
-      varz = { "total_users" => 150 }
-      context = Collector::HandlerContext.new(nil, 1, varz)
+      varz = { "total_users" => 100 + num_new_users }
+      context = Collector::HandlerContext.new(nil, time_diff, varz)
       handler.process(context)
 
     end
