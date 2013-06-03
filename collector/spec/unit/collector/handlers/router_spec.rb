@@ -135,7 +135,7 @@ describe Collector::Handler::Router do
       end
 
       it "sends metrics tagged with component:dea and dea_index:x" do
-        varz['tags']['component']['dea-2-blahblah'] = component
+        varz['tags']['component']['dea-2'] = component
 
         tags = {:component => "dea", :dea_index => "2"}
 
