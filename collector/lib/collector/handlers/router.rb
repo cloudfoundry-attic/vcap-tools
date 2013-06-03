@@ -16,7 +16,7 @@ module Collector
               # Sorry for this gem. We want to grab the DEA's number instead of its guid
               # i.e. dea-1-deadbeef should be parsed out to 1. The dea- is there by convention
               dea_id = value.split("-")[1]
-              tags = {"component" => "dea", "index" => dea_id }
+              tags = {:component => "dea", :dea_index => dea_id }
             else
               tags = {key => value}
             end
@@ -30,7 +30,6 @@ module Collector
         end
 
         send_metric("router.total_requests", varz["requests"], context)
-
       end
     end
   end
