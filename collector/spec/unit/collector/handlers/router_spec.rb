@@ -137,7 +137,7 @@ describe Collector::Handler::Router do
       it "sends metrics tagged with component:dea and dea_index:x" do
         varz['tags']['component']['dea-2'] = component
 
-        tags = {:component => "dea", :dea_index => "2"}
+        tags = {:component => "app", :dea_index => "2"}
 
         handler.process(context)
         historian.should have_sent_data("router.requests", 2400, tags)
