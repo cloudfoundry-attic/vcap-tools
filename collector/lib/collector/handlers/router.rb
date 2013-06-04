@@ -30,6 +30,7 @@ module Collector
         end
 
         send_metric("router.total_requests", varz["requests"], context)
+        send_metric("router.total_routes", varz["urls"], context)
       end
     end
   end

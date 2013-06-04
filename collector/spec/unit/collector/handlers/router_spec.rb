@@ -54,7 +54,8 @@ describe Collector::Handler::Router do
           "tags" => {
             "component" => {
             }
-          }
+          },
+          "urls" => 123456789
       }
     end
 
@@ -102,6 +103,7 @@ describe Collector::Handler::Router do
         historian.should have_sent_data("router.responses", 1600, tags.merge("status" => "xxx"))
 
         historian.should have_sent_data("router.total_requests", 68213)
+        historian.should have_sent_data("router.total_routes", 123456789)
       end
     end
 
