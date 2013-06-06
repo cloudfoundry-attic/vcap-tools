@@ -84,10 +84,10 @@ describe Collector::ServiceGatewayHandler do
 
     it "reports response code metrics to the historian" do
       handler.process_response_codes(context)
-      historian.should have_sent_data("services.http_status.2xx", 2, {service_type: "unknown", component: "gateway"})
-      historian.should have_sent_data("services.http_status.3xx", 3, {service_type: "unknown", component: "gateway"})
-      historian.should have_sent_data("services.http_status.4xx", 4, {service_type: "unknown", component: "gateway"})
-      historian.should have_sent_data("services.http_status.5xx", 5, {service_type: "unknown", component: "gateway"})
+      historian.should have_sent_data("services.http_status", 2, {service_type: "unknown", component: "gateway", status: "2xx"})
+      historian.should have_sent_data("services.http_status", 3, {service_type: "unknown", component: "gateway", status: "3xx"})
+      historian.should have_sent_data("services.http_status", 4, {service_type: "unknown", component: "gateway", status: "4xx"})
+      historian.should have_sent_data("services.http_status", 5, {service_type: "unknown", component: "gateway", status: "5xx"})
     end
   end
 

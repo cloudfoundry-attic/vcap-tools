@@ -36,7 +36,7 @@ module Collector
       return unless varz.has_key?("responses_metrics")
       varz.fetch("responses_metrics").each do |response_range, counter|
         response_code = response_range.split("_")[1]
-        send_metric("services.http_status.#{response_code}", counter, context)
+        send_metric("services.http_status", counter, context, {status: response_code})
       end
     end
 
