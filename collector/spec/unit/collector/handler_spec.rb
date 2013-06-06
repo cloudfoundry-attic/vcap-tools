@@ -63,10 +63,20 @@ describe Collector::Handler do
 
       handler.do_process(context)
     end
+
     it "sends out 'cpu_load_avg' if specified" do
       context = Collector::HandlerContext.new(nil, nil, {"cpu_load_avg" => 2.0})
       handler = Collector::Handler.new(nil, nil)
       handler.should_receive(:send_metric).with("cpu_load_avg", 2.0, context)
+
+      handler.do_process(context)
+    end
+
+    it "sends out log counts if specified" do
+      context = Collector::HandlerContext.new(nil, nil, {"log_counts" => { "error" => 4, "warn" => 3}})
+      handler = Collector::Handler.new(nil, nil)
+      handler.should_receive(:send_metric).with("log_count", 4, context, {"level" => "error"})
+      handler.should_receive(:send_metric).with("log_count", 3, context, {"level" => "warn"})
 
       handler.do_process(context)
     end

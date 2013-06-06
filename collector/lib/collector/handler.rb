@@ -101,6 +101,11 @@ module Collector
       send_metric("mem_used_bytes", varz["mem_used_bytes"], context) if varz["mem_used_bytes"]
       send_metric("cpu_load_avg", varz["cpu_load_avg"], context) if varz["cpu_load_avg"]
 
+      # Log counts in varz look like: { log_counts: { "error": 2, "warn": 1 }}
+      varz.fetch("log_counts", {}).each do |level, count|
+        send_metric("log_count", count, context, {"level" => level})
+      end
+
       process(context)
     end
 
