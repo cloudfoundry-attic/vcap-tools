@@ -73,8 +73,9 @@ describe Collector::Handler do
     end
 
     it "sends out log counts if specified" do
-      context = Collector::HandlerContext.new(nil, nil, {"log_counts" => { "error" => 4, "warn" => 3}})
+      context = Collector::HandlerContext.new(nil, nil, {"log_counts" => { "fatal" => 5, "error" => 4, "warn" => 3, "info" => 2, "debug" => 1}})
       handler = Collector::Handler.new(nil, nil)
+      handler.should_receive(:send_metric).with("log_count", 5, context, {"level" => "fatal"})
       handler.should_receive(:send_metric).with("log_count", 4, context, {"level" => "error"})
       handler.should_receive(:send_metric).with("log_count", 3, context, {"level" => "warn"})
 

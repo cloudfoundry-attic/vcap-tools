@@ -103,6 +103,7 @@ module Collector
 
       # Log counts in varz look like: { log_counts: { "error": 2, "warn": 1 }}
       varz.fetch("log_counts", {}).each do |level, count|
+        next unless %w(fatal error warn).include?(level)
         send_metric("log_count", count, context, {"level" => level})
       end
 
