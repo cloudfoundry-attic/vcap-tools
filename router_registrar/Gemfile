@@ -1,6 +1,11 @@
-source :rubygems
+source 'https://rubygems.org'
 
 gem "eventmachine"
-gem "nats"
 gem "vcap_logging"
 gem "yajl-ruby"
+gem "vcap-concurrency", :git => "https://github.com/cloudfoundry/vcap-concurrency.git"
+gem "cf-message-bus", :github => "cloudfoundry/cf-message-bus"
+
+group :development, :test do
+  gem "rspec"
+end
