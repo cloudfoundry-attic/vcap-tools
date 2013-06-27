@@ -68,7 +68,6 @@ module VcapRegistrar
       end
     end
 
-
     def register_with_router()
       @registration_message = {
         :host => Config.host,
@@ -102,15 +101,25 @@ module VcapRegistrar
     def handle_router_greeting(message)
       @logger.debug("Sending registration: #{@registration_message}")
       send_registration_message
-      EM.cancel_timer(@registration_timer) if @registration_timer
-      @registration_timer = EM.add_periodic_timer(message[:minimumRegisterIntervalInSeconds]) do
-        send_registration_message
+
+      if (interval = message[:minimumRegisterIntervalInSeconds])
+        setup_interval(interval)
       end
     end
 
     def send_unregistration_message(&block)
       @logger.info("Sending unregistration: #{@registration_message}")
       @message_bus.publish(ROUTER_UNREGISTER_TOPIC, @registration_message, &block)
+    end
+
+    private
+
+    def setup_interval(interval)
+      EM.cancel_timer(@registration_timer) if @registration_timer
+
+      @registration_timer = EM.add_periodic_timer(interval) do
+        send_registration_message
+      end
     end
   end
 end

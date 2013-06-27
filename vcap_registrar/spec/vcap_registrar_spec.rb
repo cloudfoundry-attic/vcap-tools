@@ -76,6 +76,15 @@ module VcapRegistrar
         EM.should_receive(:add_periodic_timer).with(24)
         message_bus.publish("router.start", {minimumRegisterIntervalInSeconds: 24})
       end
+
+      context "when there is no timer interval returned" do
+        it "does not set up a timer" do
+          subject.register_with_router
+
+          EM.should_not_receive(:add_periodic_timer)
+          message_bus.publish("router.start", {})
+        end
+      end
     end
   end
 end
