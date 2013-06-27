@@ -35,6 +35,7 @@ module VcapRegistrar
     DISCOVER_TOPIC = "vcap.component.discover"
     ANNOUNCE_TOPIC = "vcap.component.announce"
     ROUTER_START_TOPIC = "router.start"
+    ROUTER_GREET_TOPIC = "router.greet"
     ROUTER_REGISTER_TOPIC = "router.register"
     ROUTER_UNREGISTER_TOPIC = "router.unregister"
 
@@ -79,13 +80,13 @@ module VcapRegistrar
       @logger.info("Connected to NATS - router registration")
 
       @message_bus.subscribe(ROUTER_START_TOPIC) do |message|
-        @logger.debug("Sending registration: #{@registration_message}")
-        send_registration_message
-        EM.cancel_timer(@registration_timer) if @registration_timer
-        @registration_timer = EM.add_periodic_timer(message[:minimumRegisterIntervalInSeconds]) do
-          send_registration_message
-        end
+        handle_router_greeting(message)
       end
+
+      @message_bus.request(ROUTER_GREET_TOPIC) do |message|
+        handle_router_greeting(message)
+      end
+
       @logger.info("Sending registration: #{@registration_message}")
       send_registration_message
     end
@@ -96,6 +97,15 @@ module VcapRegistrar
 
     def send_registration_message
       @message_bus.publish(ROUTER_REGISTER_TOPIC, @registration_message)
+    end
+
+    def handle_router_greeting(message)
+      @logger.debug("Sending registration: #{@registration_message}")
+      send_registration_message
+      EM.cancel_timer(@registration_timer) if @registration_timer
+      @registration_timer = EM.add_periodic_timer(message[:minimumRegisterIntervalInSeconds]) do
+        send_registration_message
+      end
     end
 
     def send_unregistration_message(&block)
