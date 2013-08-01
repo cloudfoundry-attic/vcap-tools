@@ -1,5 +1,5 @@
 GIT
-  remote: git://github.com/cloudfoundry/cf-message-bus.git
+  remote: https://github.com/cloudfoundry/cf-message-bus.git
   revision: 88a9fc0fa75fca29a8fd1fb47c6504a252020a0f
   specs:
     cf-message-bus (0.0.1)
