@@ -4,7 +4,7 @@ gem "eventmachine"
 gem "vcap_logging"
 gem "yajl-ruby"
 gem "vcap-concurrency", :git => "https://github.com/cloudfoundry/vcap-concurrency.git"
-gem "cf-message-bus", :github => "cloudfoundry/cf-message-bus"
+gem "cf-message-bus", :git => "https://github.com/cloudfoundry/cf-message-bus.git"
 
 group :development, :test do
   gem "rspec"
